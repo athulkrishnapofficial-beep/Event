@@ -21,10 +21,30 @@ exports.getEventById = async (req, res) => {
 
 exports.createEvent = async (req, res) => {
   try {
-    const event = await Event.create(req.body);
-    res.status(201).json(event);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+    // 1. Check if file exists
+    if (!req.file) {
+      return res.status(400).json({ message: "Please upload a cover image" });
+    }
+
+    // 2. Extract data from body
+    const { title, description, price, totalTickets } = req.body;
+
+    // 3. Create new document
+    const newEvent = new Event({
+      title,
+      description,
+      price: Number(price), // Ensure it's a number
+      totalTickets: Number(totalTickets),
+      availableTickets: Number(totalTickets), // Initial available = total
+      coverImage: `/uploads/${req.file.filename}`,
+      organizer: req.user.id, // Comes from 'auth' middleware
+    });
+
+    const savedEvent = await newEvent.save();
+    res.status(201).json(savedEvent);
+  } catch (err) {
+    console.error("Creation Error:", err.message);
+    res.status(400).json({ message: err.message });
   }
 };
 

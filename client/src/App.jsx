@@ -4,6 +4,7 @@ import Signup from './pages/Signup';
 import Home from './pages/Home';
 import OrganizerDashboard from './pages/OrganizerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import CreateEvent from './pages/CreateEvent';
 
 // 1. Protected Route Component
 // This prevents a User from typing "/admin" in the URL to bypass security
@@ -63,6 +64,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route path="/create-event" element={<CreateEvent />} />
 
           {/* Fallback for 404 */}
           <Route path="*" element={<h1 className="text-center mt-10 text-2xl">404 - Page Not Found</h1>} />
