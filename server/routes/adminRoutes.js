@@ -5,7 +5,8 @@ const { getAllUsers, getAllOrganizers, getPendingEvents, approveEvent } = requir
 
 // Middleware to ensure user is admin
 const verifyAdmin = (req, res, next) => {
-  if (req.user && req.user.email === 'admin@gmail.com') {
+  // ensure this email matches exactly what is in your database
+  if (req.user && req.user.email === 'admin@gmail.com') { 
     next();
   } else {
     res.status(403).json({ message: "Access Denied: Admins Only" });
