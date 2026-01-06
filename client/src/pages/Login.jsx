@@ -34,8 +34,6 @@ export default function Login() {
       } else {
         navigate('/home'); // Default: normal user → home page
       }
-
-      alert(`Welcome back, ${data.name}!`); // Show welcome message
     } catch (err) {
       // Handle potential errors — show server message if available
       alert(err.response?.data?.message || "Login failed. Check your credentials.");
