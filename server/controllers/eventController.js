@@ -82,7 +82,19 @@ exports.createEvent = async (req, res) => {
 
 exports.updateEvent = async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    // 1. Prepare the update object
+    let updates = { ...req.body };
+
+    // 2. If a new file is uploaded, update the coverImage field
+    if (req.file) {
+      updates.coverImage = req.file.path; // Cloudinary URL
+    }
+
+    // 3. Perform the update
+    const event = await Event.findByIdAndUpdate(req.params.id, updates, { new: true });
+    
+    if (!event) return res.status(404).json({ message: "Event not found" });
+    
     res.status(200).json(event);
   } catch (error) {
     res.status(400).json({ message: error.message });

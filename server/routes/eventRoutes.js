@@ -16,7 +16,7 @@ router.get("/single/:id", getEventById);
 router.post('/', auth, upload.single('coverImage'), createEvent);
 router.post('/create', auth, upload.single('coverImage'), createEvent);
 router.get("/my-events", auth, getMyEvents);
-router.put("/:id", auth, updateEvent);
+router.put("/:id", auth, upload.single('coverImage'), updateEvent);
 router.delete("/:id", auth, deleteEvent);
 
 module.exports = router;
