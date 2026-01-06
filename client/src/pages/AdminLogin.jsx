@@ -44,31 +44,33 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="bg-white border border-gray-200 p-8 rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex justify-center mb-6">
-          <div className="bg-red-600 p-3 rounded-full">
-            <ShieldAlert className="w-8 h-8 text-white" />
+          <div className="bg-red-100 p-3 rounded-full">
+            <ShieldAlert className="w-8 h-8 text-red-600" />
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-white text-center mb-6">Restricted Area</h2>
+        <h2 className="text-2xl font-bold text-gray-800 text-center mb-6">
+          Restricted Area
+        </h2>
         
         <form onSubmit={handleLogin} className="space-y-4">
           
           <div className="relative">
-            <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
+            <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
             <input 
               type="email" name="email" placeholder="Admin Email" 
-              className="w-full bg-gray-800 text-white pl-10 p-3 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+              className="w-full bg-white text-gray-800 pl-10 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
               onChange={handleChange} required 
             />
           </div>
 
           <div className="relative">
-            <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
+            <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
             <input 
               type="password" name="password" placeholder="Password" 
-              className="w-full bg-gray-800 text-white pl-10 p-3 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+              className="w-full bg-white text-gray-800 pl-10 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
               onChange={handleChange} required 
             />
           </div>
@@ -77,12 +79,15 @@ export default function AdminLogin() {
             <Key className="absolute left-3 top-3 w-5 h-5 text-yellow-500" />
             <input 
               type="password" name="secretCode" placeholder="6-Digit Secret Code" maxLength="6"
-              className="w-full bg-gray-800 text-yellow-400 pl-10 p-3 rounded-lg border border-yellow-600/30 focus:ring-2 focus:ring-yellow-500 outline-none placeholder-gray-600"
+              className="w-full bg-white text-yellow-600 pl-10 p-3 rounded-lg border border-yellow-400 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none placeholder-gray-400"
               onChange={handleChange} required 
             />
           </div>
 
-          <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition">
+          <button
+            type="submit"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition"
+          >
             Authenticate
           </button>
         </form>
