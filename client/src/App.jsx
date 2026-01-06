@@ -8,7 +8,7 @@ import CreateEvent from './pages/CreateEvent';
 import MyBookings from './pages/MyBookings';
 import EventDetails from './pages/EventDetailss.jsx';
 import AdminLogin from './pages/AdminLogin';
-import EditEvent from './pages/EditEvent.jsx';
+import EditEvent from './pages/EditEvent';
 
 // 1. Protected Route Component
 // This prevents a User from typing "/admin" in the URL to bypass security
