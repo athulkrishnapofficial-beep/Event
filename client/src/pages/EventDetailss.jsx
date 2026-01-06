@@ -15,7 +15,8 @@ export default function EventDetails() {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const { data } = await axios.get(`http://localhost:5000/api/events/single/${id}`); // Fetch event by ID
+       // const { data } = await axios.get(`http://localhost:5000/api/events/single/${id}`); // Fetch event by ID
+        const { data } = await axios.get(`https://event-kqrm.onrender.com/api/events/single/${id}`); // Fetch event by ID
         setEvent(data); // Store event in state
       } catch (err) {
         console.error("Error fetching event:", err); // Log error if failed
@@ -38,7 +39,8 @@ export default function EventDetails() {
     try {
         // Step 1: Create an order in backend
         const orderResponse = await axios.post(
-            'http://localhost:5000/api/payments/order', // API endpoint for Razorpay order creation
+            //'http://localhost:5000/api/payments/order', // API endpoint for Razorpay order creation
+            'https://event-kqrm.onrender.com/api/payments/order',
             { amount: event.price, eventId: event._id }, // Send amount and event ID
             { headers: { Authorization: `Bearer ${token}` } } // Authorization header
         );
