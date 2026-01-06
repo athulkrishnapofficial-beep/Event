@@ -1,86 +1,101 @@
-import { useState } from 'react';
-import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+// Importing essential libraries and hooks
+import { useState } from 'react'; // For managing form input state
+import axios from 'axios'; // For making API requests
+import { useNavigate, Link } from 'react-router-dom'; // For navigation and internal linking
 
+// Main Login component
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const { data } = await axios.post('http://localhost:5000/api/users/login', { 
-        email, 
-        password 
-      });
+  const [email, setEmail] = useState(''); // State for email input
+  const [password, setPassword] = useState(''); // State for password input
+  const navigate = useNavigate(); // React Router hook for navigation
 
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('role', data.role);
+  // Function to handle login form submission
+  const handleLogin = async (e) => {
+    e.preventDefault(); // Prevents page reload on form submission
+    try {
+      // Send POST request to backend for authentication
+      const { data } = await axios.post('http://localhost:5000/api/users/login', { 
+        email,  // User email
+        password // User password
+      });
 
-      if (data.role === 'admin') {
-        navigate('/admin-panel');
-      } else if (data.role === 'organizer') {
-        navigate('/organizer-dashboard');
-      } else {
-        navigate('/home');
-      }
+      // Save token and role to localStorage for session persistence
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('role', data.role);
 
-      alert(`Welcome back, ${data.name}!`);
-    } catch (err) {
-      alert(err.response?.data?.message || "Login failed. Check your credentials.");
-    }
-  };
+      // Redirect user based on role after successful login
+      if (data.role === 'admin') {
+        navigate('/admin-panel'); // Admin goes to admin panel
+      } else if (data.role === 'organizer') {
+        navigate('/organizer-dashboard'); // Organizer dashboard
+      } else {
+        navigate('/home'); // Default: normal user → home page
+      }
 
-  return (
-    <div
-      className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: "url('poster bg login.jpg')" }}
-    >
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/30"></div>
+      alert(`Welcome back, ${data.name}!`); // Show welcome message
+    } catch (err) {
+      // Handle potential errors — show server message if available
+      alert(err.response?.data?.message || "Login failed. Check your credentials.");
+    }
+  };
 
-      {/* Form Card */}
-      <div className="relative bg-white p-8 rounded-lg shadow-xl w-96 border-t-4 border-black">
-          <h2 className="text-3xl font-bold mb-2 text-center text-gray-800">Login</h2>
-          <p className="text-center text-gray-500 mb-6">Welcome back to EventEase</p>
+  // JSX structure for login UI
+  return (
+    <div
+      className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('poster bg login.jpg')" }} // Background image for login page
+    >
+      {/* Semi-transparent overlay for dim background */}
+      <div className="absolute inset-0 bg-black/30"></div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Gmail ID</label>
-            <input 
-              type="email" 
-              placeholder="you@gmail.com"
-              className="w-full p-2 mt-1 border rounded focus:ring-2 focus:ring-black outline-none"
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
-            <input 
-              type="password" 
-              placeholder="••••••••"
-              className="w-full p-2 mt-1 border rounded focus:ring-2 focus:ring-black outline-none"
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+      {/* Login form card container */}
+      <div className="relative bg-white p-8 rounded-lg shadow-xl w-96 border-t-4 border-black">
+          <h2 className="text-3xl font-bold mb-2 text-center text-gray-800">Login</h2> {/* Title */}
+          <p className="text-center text-gray-500 mb-6">Welcome back to EventEase</p> {/* Subtitle */}
 
-          <button 
-            type="submit" 
-            className="w-full bg-gray-600 text-white p-2 rounded-lg font-semibold hover:bg-black transition duration-200"
-          >
-            Login
-          </button>
-        </form>
+        {/* Login form */}
+        <form onSubmit={handleLogin} className="space-y-4">
 
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account? 
-          <Link to="/signup" className="text-black font-bold hover:underline ml-1">Register</Link>
-        </p>
-      </div>
-    </div>
-  );
+          {/* Email Input */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Gmail ID</label>
+            <input 
+              type="email"  // Input type: email
+              placeholder="you@gmail.com" // Placeholder example
+              className="w-full p-2 mt-1 border rounded focus:ring-2 focus:ring-black outline-none" // Styling
+              onChange={(e) => setEmail(e.target.value)} // Update email state
+              required // Field validation
+            />
+          </div>
+          
+          {/* Password Input */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <input 
+              type="password" // Input type: password
+              placeholder="••••••••" // Hidden character placeholder
+              className="w-full p-2 mt-1 border rounded focus:ring-2 focus:ring-black outline-none"
+              onChange={(e) => setPassword(e.target.value)} // Update password state
+              required
+            />
+          </div>
+
+          {/* Submit Button */}
+          <button 
+            type="submit"  // Form submit action
+            className="w-full bg-gray-600 text-white p-2 rounded-lg font-semibold hover:bg-black transition duration-200"
+          >
+            Login
+          </button>
+        </form>
+
+        {/* Signup Redirect Text */}
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Don't have an account? 
+          <Link to="/signup" className="text-black font-bold hover:underline ml-1">Register</Link> {/* Navigate to signup */}
+        </p>
+      </div>
+    </div>
+  );
 }

@@ -5,6 +5,8 @@ import Home from './pages/Home';
 import OrganizerDashboard from './pages/OrganizerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import CreateEvent from './pages/CreateEvent';
+import EventDetails from './pages/EventDetails';
+import MyBookings from './pages/MyBookings';
 
 // 1. Protected Route Component
 // This prevents a User from typing "/admin" in the URL to bypass security
@@ -41,8 +43,11 @@ function App() {
               <ProtectedRoute allowedRoles={['user', 'admin']}>
                 <Home />
               </ProtectedRoute>
+
             } 
           />
+          <Route path="/my-bookings" element={<MyBookings />} />
+          <Route path="/event/:id" element={<EventDetails />} />
 
           {/* Organizer Routes */}
            

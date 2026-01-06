@@ -1,140 +1,155 @@
+// Importing required dependencies
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+// Component Definition
 export default function CreateEvent() {
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    price: '',
-    totalTickets: ''
-  });
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // React Router hook to navigate after form submission
+  
+  // Form data state initialization (includes category and coverImage fields)
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    date: '',
+    time: '',
+    location: '',
+    price: '',
+    availableTickets: '',
+    category: 'Events', // Default category value
+    coverImage: null
+  });
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (!selectedFile) return;
-    setFile(selectedFile);
-    setPreview(URL.createObjectURL(selectedFile));
-  };
+  // Updates form fields dynamically on input change
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem('token');
+  // Handles file input (cover image)
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, coverImage: e.target.files[0] });
+  };
 
-    const data = new FormData();
-    if (file) data.append('image', file);
-    data.append('title', formData.title);
-    data.append('description', formData.description);
-    data.append('price', Number(formData.price));
-    data.append('totalTickets', Number(formData.totalTickets));
+  // Handles form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevents form's default page reload behavior
+    const data = new FormData(); // Creates FormData object for sending files via POST
 
-    try {
-      await axios.post('http://localhost:5000/api/events', data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      alert('Event created successfully! Waiting for admin approval.');
-      navigate('/organizer-dashboard');
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to create event');
-    }
-  };
+    // Append each field from formData into FormData
+    Object.keys(formData).forEach(key => {
+      data.append(key, formData[key]);
+    });
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 py-12 px-4 flex items-center justify-center">
-      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-        {/* Header */}
-        <div className="px-8 py-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900 text-center">Create New Event</h2>
-          <p className="text-sm text-gray-500 text-center mt-1">Fill in the details to list your event</p>
-        </div>
+    try {
+      const token = localStorage.getItem('token'); // Fetch token from localStorage
+      // Send POST request to backend API with headers (authorization + multipart)
+      await axios.post('http://localhost:5000/api/events', data, {
+        headers: { 
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
+        }
+      });
+      alert('Event Created! Waiting for Admin Approval.'); // Show success message
+      navigate('/organizer-dashboard'); // Redirect to organizer dashboard
+    } catch (err) {
+      console.error(err);
+      alert('Error creating event'); // Display error if API call fails
+    }
+  };
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
-          {/* Image Upload */}
-          <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50">
-            {preview ? (
-              <img
-                src={preview}
-                alt="Event preview"
-                className="h-48 w-full object-cover rounded-lg mb-4 border"
-              />
-            ) : (
-              <div className="text-gray-400 text-center py-10">No image selected</div>
-            )}
+  // JSX for the component UI
+  return (
+    <div className="min-h-screen bg-gray-50 py-10 flex justify-center">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg border border-gray-100">
+        <h1 className="text-3xl font-black text-gray-800 mb-6 text-center">Host an Event</h1>
+        
+        {/* Form starts here */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* Event Title Field */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Event Title</label>
+            <input type="text" name="title" onChange={handleChange} required 
+              className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-black outline-none transition" placeholder="e.g. Summer Music Fest" />
+          </div>
 
-            <label className="inline-flex items-center justify-center">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                required={!preview}
-                className="sr-only"
-              />
-              <span className="px-5 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 cursor-pointer transition">
-                Upload Event Image
-              </span>
-            </label>
-          </div>
+          {/* Category Dropdown Field */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Category</label>
+            <div className="relative">
+                <select 
+                    name="category" 
+                    value={formData.category} 
+                    onChange={handleChange} 
+                    className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-black outline-none appearance-none bg-white cursor-pointer"
+                >
+                    <option value="Events">General Event</option>
+                    <option value="Plays">Theater / Play</option>
+                    <option value="Sports">Sports Match</option>
+                    <option value="Activities">Activity / Workshop</option>
+                </select>
+                {/* Dropdown Arrow Icon */}
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+            </div>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <input
-              type="text"
-              placeholder="Event Title"
-              className="w-full p-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-black"
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              required
-            />
+          {/* Date and Time Fields */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Date</label>
+                <input type="date" name="date" onChange={handleChange} required 
+                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-black outline-none" />
+            </div>
+            <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Time</label>
+                <input type="time" name="time" onChange={handleChange} required 
+                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-black outline-none" />
+            </div>
+          </div>
 
-            <input
-              type="number"
-              placeholder="Ticket Price (₹)"
-              className="w-full p-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-black"
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              required
-            />
-          </div>
+          {/* Location Field */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Location</label>
+            <input type="text" name="location" onChange={handleChange} required 
+              className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-black outline-none" placeholder="City or Venue" />
+          </div>
 
-          <textarea
-            placeholder="Event Description"
-            rows="4"
-            className="w-full p-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-black"
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            required
-          />
+          {/* Price and Ticket Count Fields */}
+          <div className="grid grid-cols-2 gap-4">
+             <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Price (₹)</label>
+                <input type="number" name="price" onChange={handleChange} required 
+                  className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-black outline-none" placeholder="0" />
+             </div>
+             <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Tickets</label>
+                <input type="number" name="availableTickets" onChange={handleChange} required 
+                  className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-black outline-none" placeholder="100" />
+             </div>
+          </div>
 
-          <input
-            type="number"
-            placeholder="Total Tickets Available"
-            className="w-full p-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-black"
-            onChange={(e) => setFormData({ ...formData, totalTickets: e.target.value })}
-            required
-          />
+          {/* Description Field */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Description</label>
+            <textarea name="description" rows="3" onChange={handleChange} required 
+              className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-black outline-none" placeholder="Tell people what it's about..."></textarea>
+          </div>
 
-          <div className="flex gap-4 pt-4">
-            <button
-              type="submit"
-              className="flex-1 bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition shadow"
-            >
-              Create Event
-            </button>
+          {/* Cover Image Upload */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Cover Image</label>
+            <input type="file" name="coverImage" onChange={handleFileChange} required 
+              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"/>
+          </div>
 
-            <button
-              type="button"
-              onClick={() => navigate('/organizer-dashboard')}
-              className="flex-1 bg-gray-100 border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-200 transition"
-            >
-              Cancel
-            </button>
-          </div>
-
-          <p className="text-xs text-gray-400 text-center">Your event will be reviewed by admins before going live.</p>
-        </form>
-      </div>
-    </div>
-  );
+          {/* Submit Button */}
+          <button type="submit" className="w-full bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition shadow-lg active:scale-95">
+            Create Event
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 }

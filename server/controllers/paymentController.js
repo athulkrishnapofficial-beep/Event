@@ -1,5 +1,7 @@
-const Razorpay = require("razorpay");
-const crypto = require("crypto");
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
+const Booking = require('../models/Booking');
+const Event = require('../models/eventModel');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -9,22 +11,20 @@ const razorpay = new Razorpay({
 exports.createOrder = async (req, res) => {
   try {
     const options = {
-      amount: req.body.amount * 100,
+      amount: req.body.amount * 100, // amount in paise
       currency: "INR",
-      receipt: `receipt_${Date.now()}`,
+      receipt: `rcpt_${Date.now()}`,
     };
-
     const order = await razorpay.orders.create(options);
-    res.status(201).json(order);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(200).json(order);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
 exports.verifyPayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-      req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, eventId, amount } = req.body;
     const sign = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSign = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -32,11 +32,21 @@ exports.verifyPayment = async (req, res) => {
       .digest("hex");
 
     if (razorpay_signature === expectedSign) {
-      return res.status(200).json({ message: "Payment verified successfully" });
+      const newBooking = new Booking({
+        user: req.user.id,
+        event: eventId,
+        paymentId: razorpay_payment_id,
+        orderId: razorpay_order_id,
+        amount: amount
+      });
+      await newBooking.save();
+      await Event.findByIdAndUpdate(eventId, { $inc: { availableTickets: -1 } });
+
+      return res.status(200).json({ success: true, message: "Payment verified successfully" });
     } else {
-      return res.status(400).json({ message: "Invalid payment signature" });
+      return res.status(400).json({ success: false, message: "Invalid signature" });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Verification failed" });
   }
 };

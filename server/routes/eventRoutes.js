@@ -1,22 +1,22 @@
 const express = require("express");
 const router = express.Router();
+const { auth } = require("../middlewares/auth");
+const upload = require('../middlewares/upload'); 
 
 const {
-  getEvents,
-  getEventById,
   createEvent,
+  getEvents,
+  getEventById, 
+  getMyEvents,
   updateEvent,
   deleteEvent,
 } = require("../controllers/eventController");
-
-const { auth } = require("../middlewares/auth");
-const { roleCheck } = require("../middlewares/roleCheck");
-
 router.get("/", getEvents);
-router.get("/:id", getEventById);
-
-router.post("/", auth, roleCheck(["admin", "provider"]), createEvent);
-router.put("/:id", auth, roleCheck(["admin", "provider"]), updateEvent);
-router.delete("/:id", auth, roleCheck(["admin"]), deleteEvent);
+router.get("/single/:id", getEventById); 
+router.post('/', auth, upload.single('coverImage'), createEvent);
+router.post('/create', auth, upload.single('coverImage'), createEvent);
+router.get("/my-events", auth, getMyEvents);
+router.put("/:id", auth, updateEvent);
+router.delete("/:id", auth, deleteEvent);
 
 module.exports = router;

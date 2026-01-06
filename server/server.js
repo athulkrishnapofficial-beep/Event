@@ -1,35 +1,40 @@
 const express = require("express");
-const dotenv = require("dotenv");
+const mongoose = require("mongoose");
 const cors = require("cors");
-const connectDB = require("./config/db");
+const path = require("path"); // Added for file uploads
+require("dotenv").config();
 
-// 1. Load environment variables
-dotenv.config();
-
-// 2. Connect to Database
-connectDB();
-
-// 3. Import all Route files
+// 1. Import Routes
 const userRoutes = require("./routes/userRoutes");
+const authRoutes = require("./routes/userRoutes");
 const eventRoutes = require("./routes/eventRoutes");
-const bookingRoutes = require("./routes/bookingRoutes");
-const paymentRoutes = require("./routes/paymentRoutes");
+const paymentRoutes = require("./routes/paymentRoutes"); // Import payment routes
+const bookingRoutes = require("./routes/bookingRoutes"); // Import booking routes
 
+// 2. Initialize App (CRITICAL: This must be before app.use)
 const app = express();
 
-// 4. Global Middlewares
+// 3. Middleware
 app.use(express.json());
 app.use(cors());
-app.use("/uploads", express.static("uploads")); 
-
-// 5. Mount API Routes
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Serve images
 app.use("/api/users", userRoutes);
-app.use("/api/events", eventRoutes);
-app.use("/api/bookings", bookingRoutes);
-app.use("/api/payments", paymentRoutes);
 
-// 6. Server Entry
+// 4. Use Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/events", eventRoutes);
+app.use("/api/payments", paymentRoutes); // Now 'app' exists, so this works
+app.use("/api/bookings", bookingRoutes);
+
+// 5. Connect to DB and Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => console.log(err));

@@ -1,11 +1,22 @@
 const Event = require("../models/eventModel");
 
+// 1. Get all approved events for Homepage
 exports.getEvents = async (req, res) => {
   try {
-    const events = await Event.find();
+    const events = await Event.find({ isApproved: true });
     res.status(200).json(events);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// 2. Get specific events created by the logged-in Organizer
+exports.getMyEvents = async (req, res) => {
+  try {
+    const events = await Event.find({ organizer: req.user.id });
+    res.status(200).json(events);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching your events" });
   }
 };
 
@@ -19,40 +30,59 @@ exports.getEventById = async (req, res) => {
   }
 };
 
+// 3. CREATE EVENT (Fixed for Dashboard Math)
 exports.createEvent = async (req, res) => {
   try {
-    // 1. Check if file exists
-    if (!req.file) {
-      return res.status(400).json({ message: "Please upload a cover image" });
+    const { 
+      title, 
+      description, 
+      date, 
+      time, 
+      location, 
+      price, 
+      totalTickets, 
+      availableTickets, 
+      category 
+    } = req.body;
+
+  
+    const total = totalTickets || availableTickets;
+
+    // Validation
+    if (!total || !price) {
+      return res.status(400).json({ success: false, message: "Price and Total Tickets are required" });
     }
 
-    // 2. Extract data from body
-    const { title, description, price, totalTickets } = req.body;
-
-    // 3. Create new document
     const newEvent = new Event({
       title,
       description,
-      price: Number(price), // Ensure it's a number
-      totalTickets: Number(totalTickets),
-      availableTickets: Number(totalTickets), // Initial available = total
-      coverImage: `/uploads/${req.file.filename}`,
-      organizer: req.user.id, // Comes from 'auth' middleware
+      date,
+      time,
+      location,
+      price: Number(price),
+      
+      // CRITICAL LOGIC FOR DASHBOARD:
+      // 1. Store the starting number (Total)
+      totalTickets: Number(total),
+      // 2. Initially, Available = Total (0 sold)
+      availableTickets: Number(total), 
+      
+      coverImage: req.file ? `/uploads/${req.file.filename}` : "",
+      category: category || 'Events',
+            organizer: req.user.id 
     });
 
-    const savedEvent = await newEvent.save();
-    res.status(201).json(savedEvent);
+    await newEvent.save();
+    res.status(201).json({ success: true, message: "Event created!" });
   } catch (err) {
-    console.error("Creation Error:", err.message);
-    res.status(400).json({ message: err.message });
+    console.error("Create Event Error:", err);
+    res.status(400).json({ success: false, message: err.message });
   }
 };
 
 exports.updateEvent = async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.status(200).json(event);
   } catch (error) {
     res.status(400).json({ message: error.message });
