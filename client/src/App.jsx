@@ -7,6 +7,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import CreateEvent from './pages/CreateEvent';
 import MyBookings from './pages/MyBookings';
 import EventDetails from './pages/EventDetailss.jsx';
+import AdminLogin from './pages/AdminLogin';
 
 // 1. Protected Route Component
 // This prevents a User from typing "/admin" in the URL to bypass security
@@ -61,14 +62,8 @@ function App() {
           />
 
           {/* Admin Routes */}
-          <Route 
-            path="/admin-panel" 
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } 
-          />
+          <Route path="/admin" element={<AdminLogin />} />
+<Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/create-event" element={<CreateEvent />} />
 
           {/* Fallback for 404 */}

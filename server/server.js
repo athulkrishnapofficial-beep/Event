@@ -28,6 +28,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/payments", paymentRoutes); // Now 'app' exists, so this works
 app.use("/api/bookings", bookingRoutes);
+app.use('/api/admin', require('./routes/adminRoutes'));
 
 // 5. Connect to DB and Start Server
 const PORT = process.env.PORT || 5000;
