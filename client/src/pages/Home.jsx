@@ -58,7 +58,9 @@ export default function Home() {
   useEffect(() => {
     const fetchApprovedEvents = async () => {
       try {
-        const { data } = await axios.get('http://localhost:5000/api/events'); // Fetch all events
+        //const { data } = await axios.get('http://localhost:5000/api/events'); 
+        const { data } = await axios.get('https://event-kqrm.onrender.com/api/events'); // Fetch all events
+        
         const approved = data.filter(event => event.isApproved === true); // Only include approved events
         setEvents(approved); // Set to state
         setFilteredEvents(approved); // Also display initially
@@ -218,7 +220,7 @@ export default function Home() {
                 <Link to={`/event/${event._id}`}> {/* Link to event details */}
                 <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-md">
                   <img
-                    src={`http://localhost:5000${event.coverImage}`} // Event cover image
+                    src={event.coverImage} // Event cover image
                     alt={event.title}
                     className="w-full h-full object-cover transition duration-700 group-hover:scale-110"
                   />

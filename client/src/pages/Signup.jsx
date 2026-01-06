@@ -15,7 +15,8 @@ export default function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submit (page reload)
     try {
-      await axios.post('http://localhost:5000/api/users/signup', formData); // Send signup data to backend
+      await axios.post('https://event-kqrm.onrender.com/api/users/signup', formData); // Send signup data to backend
+      //await axios.post('http://localhost:5000/api/users/signup', formData);
       alert("Registration Successful!"); // Notify success
       navigate('/login'); // Redirect to login page
     } catch (err) {

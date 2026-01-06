@@ -70,7 +70,8 @@ export default function EventDetails() {
 
                     // Step 3: Verify payment from backend
                     const verifyResponse = await axios.post(
-                        'http://localhost:5000/api/payments/verify',
+                        //'http://localhost:5000/api/payments/verify',
+                        'https://event-kqrm.onrender.com/api/payments/verify',
                         verifyData,
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
@@ -140,7 +141,7 @@ export default function EventDetails() {
             {/* Event cover image with rating */}
             <div className="relative group overflow-hidden rounded-3xl shadow-2xl">
               <img 
-                src={`http://localhost:5000${event.coverImage}`} // Show cover image
+                src={event.coverImage} // Show cover image
                 alt={event.title} // Alt text
                 className="w-full h-[500px] object-cover group-hover:scale-105 transition-transform duration-700"
               />

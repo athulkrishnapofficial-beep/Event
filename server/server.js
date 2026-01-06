@@ -16,7 +16,10 @@ const app = express();
 
 // 3. Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: '*', 
+    credentials: true
+}));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Serve images
 app.use("/api/users", userRoutes);
 

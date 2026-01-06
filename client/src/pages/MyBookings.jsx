@@ -19,7 +19,8 @@ export default function MyBookings() {
         return; // Stop further execution
       }
       try {
-        const { data } = await axios.get('http://localhost:5000/api/bookings/my-bookings', {
+        //const { data } = await axios.get('http://localhost:5000/api/bookings/my-bookings', {
+        const { data } = await axios.get('https://event-kqrm.onrender.com/api/bookings/my-bookings', {
           headers: { Authorization: `Bearer ${token}` } // Attach auth header with token
         });
         setBookings(data); // Save bookings in state
@@ -70,7 +71,7 @@ export default function MyBookings() {
               {/* Event Image */}
               <div className="sm:w-1/3 h-48 sm:h-auto relative bg-gray-200">
                 <img 
-                  src={`http://localhost:5000${booking.event?.coverImage}`} // Event cover image from API
+                  src={booking.event?.coverImage} // Event cover image from API
                   alt={booking.event?.title} // Alt text for accessibility
                   className="w-full h-full object-cover"
                 />

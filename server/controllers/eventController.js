@@ -67,7 +67,7 @@ exports.createEvent = async (req, res) => {
       // 2. Initially, Available = Total (0 sold)
       availableTickets: Number(total), 
       
-      coverImage: req.file ? `/uploads/${req.file.filename}` : "",
+      coverImage: req.file ? req.file.path : "",
       category: category || 'Events',
             organizer: req.user.id 
     });
