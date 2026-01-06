@@ -19,7 +19,9 @@ export default function AdminDashboard() {
       if (activeTab === 'organizers') endpoint = '/api/admin/organizers';
       if (activeTab === 'pending') endpoint = '/api/admin/events/pending';
 
-      const res = await axios.get(`http://localhost:5000${endpoint}`, {
+      //const res = await axios.get(`http://localhost:5000${endpoint}`, {
+      const res = await axios.get(`https://event-kqrm.onrender.com${endpoint}`, {
+
         headers: { Authorization: `Bearer ${token}` }
       });
       setData(res.data);
@@ -37,7 +39,8 @@ export default function AdminDashboard() {
   const approveEvent = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/admin/approve-event/${id}`, {}, {
+      //await axios.put(`http://localhost:5000/api/admin/approve-event/${id}`, {}, {
+      await axios.put(`https://event-kqrm.onrender.com/api/admin/approve-event/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert("Event Approved!");
