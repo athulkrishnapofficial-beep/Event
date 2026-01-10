@@ -145,7 +145,7 @@ export default function EventDetails() {
               <img 
                 src={event.coverImage} // Show cover image
                 alt={event.title} // Alt text
-                className="w-full h-[500px] object-cover group-hover:scale-105 transition-transform duration-700"
+                className="w-full h-125 object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute bottom-6 left-6 bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-xl flex items-center shadow-lg">
                 <Star className="w-5 h-5 mr-2 text-yellow-400 fill-yellow-400" /> {/* Star icon */}
@@ -203,7 +203,7 @@ export default function EventDetails() {
 
           {/* RIGHT SECTION: Booking & Payment */}
           <div className="lg:col-span-1">
-            <div className="bg-white p-8 rounded-[32px] shadow-2xl border border-gray-50 sticky top-28 overflow-hidden">
+            <div className="bg-white p-8 rounded-4xl shadow-2xl border border-gray-50 sticky top-28 overflow-hidden">
               <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-black px-4 py-1 rounded-bl-xl uppercase tracking-tighter">
                 Filling Fast {/* Label tag */}
               </div>
@@ -217,7 +217,7 @@ export default function EventDetails() {
               {/* Payment Security Info */}
               <div className="space-y-4 mb-8">
                 <div className="flex items-center text-sm text-green-700 font-bold bg-green-50 p-4 rounded-2xl border border-green-100">
-                  <ShieldCheck className="w-5 h-5 mr-3 flex-shrink-0" /> {/* Shield icon */}
+                  <ShieldCheck className="w-5 h-5 mr-3 shrink-0" /> {/* Shield icon */}
                   Secure Checkout Guaranteed
                 </div>
                 <p className="text-[11px] text-gray-400 text-center px-4 leading-tight">

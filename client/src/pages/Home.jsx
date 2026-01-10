@@ -9,7 +9,7 @@ import { Ticket, Search } from 'lucide-react'; // Icons from lucide library
 function EventCardSkeleton() {
   return (
     <div className="animate-pulse space-y-3"> {/* Pulsing animation */}
-      <div className="aspect-[2/3] rounded-xl bg-gradient-to-br from-gray-300 to-gray-200" /> {/* Dummy image */}
+      <div className="aspect-2/3 rounded-xl bg-linear-to-br from-gray-300 to-gray-200" /> {/* Dummy image */}
       <div className="h-4 bg-gray-300 rounded w-4/5" /> {/* Dummy title */}
       <div className="h-3 bg-gray-200 rounded w-full" /> {/* Dummy description */}
       <div className="h-4 bg-gray-300 rounded w-1/3" /> {/* Dummy footer */}
@@ -144,7 +144,7 @@ export default function Home() {
         </div>
 
         {/* CATEGORY NAV BAR */}
-        <div className="bg-gradient-to-r from-[#2b3178] to-[#1f2437] border-t border-white/10">
+        <div className="bg-linear-to-r from-[#2b3178] to-[#1f2437] border-t border-white/10">
           <div className="max-w-7xl mx-auto px-4">
             <nav className="flex items-center gap-8 py-3 text-sm font-medium overflow-x-auto no-scrollbar">
               {categories.map((item) => ( // Map through category list
@@ -175,7 +175,7 @@ export default function Home() {
               alt="Banner"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent" /> {/* Dark overlay left */}
+            <div className="absolute inset-0 bg-linear-to-r from-black/80 to-transparent" /> {/* Dark overlay left */}
             <div className="absolute left-8 md:left-16 top-1/2 -translate-y-1/2 text-white max-w-lg">
               <h2 className="text-3xl md:text-5xl font-extrabold leading-tight">
                 Relive the Best<br />Events of <span className="text-red-500">2026</span>
@@ -218,13 +218,13 @@ export default function Home() {
                 className="group cursor-pointer transition transform hover:-translate-y-2 hover:shadow-xl rounded-xl duration-300"
               >
                 <Link to={`/event/${event._id}`}> {/* Link to event details */}
-                <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-md">
+                <div className="relative aspect-2/3 rounded-xl overflow-hidden shadow-md">
                   <img
                     src={event.coverImage} // Event cover image
                     alt={event.title}
                     className="w-full h-full object-cover transition duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" /> {/* Overlay */}
+                  <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" /> {/* Overlay */}
 
                   {/* Category Tag */}
                   <div className="absolute top-2 right-2 bg-white/20 backdrop-blur-md border border-white/30 text-white px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">
