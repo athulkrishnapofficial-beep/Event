@@ -9,9 +9,10 @@ import MyBookings from './pages/MyBookings';
 import EventDetails from './pages/EventDetailss.jsx';
 import AdminLogin from './pages/AdminLogin';
 import EditEvent from './pages/EditEvent';
+import Profile from './pages/Profile';
+import ContactSupport from './pages/ContactSupport';
 
-// 1. Protected Route Component
-// This prevents a User from typing "/admin" in the URL to bypass security
+// Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role');
@@ -20,8 +21,8 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (!allowedRoles.includes(role)) {
-    // If the role doesn't match, send them back to login or an unauthorized page
+  // If roles are specified, check them. If not specified, just allow the logged-in user.
+  if (allowedRoles && !allowedRoles.includes(role)) {
     return <Navigate to="/" replace />;
   }
 
@@ -33,27 +34,31 @@ function App() {
     <Router>
       <div className="min-h-screen bg-gray-50">
         <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Navigate to="/login" />} />
+          {/* --- PUBLIC ROUTES (Visible to everyone) --- */}
+          {/* 1. Change root path to show Home instead of redirecting to Login */}
+          <Route path="/" element={<Home />} /> 
+          <Route path="/home" element={<Navigate to="/" replace />} /> {/* Optional: Redirect /home to / */}
+          
+          {/* 2. Event Details should be public so users can see what they are buying */}
+          <Route path="/event/:id" element={<EventDetails />} />
+          
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/edit-event/:id" element={<EditEvent />} />
+          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/contact-support" element={<ContactSupport />} />
 
-          {/* User Routes */}
+          {/* --- PROTECTED USER ROUTES (Login Required) --- */}
           <Route 
-            path="/home" 
+            path="/my-bookings" 
             element={
-              <ProtectedRoute allowedRoles={['user', 'admin']}>
-                <Home />
+              <ProtectedRoute allowedRoles={['user', 'admin', 'organizer']}>
+                <MyBookings />
               </ProtectedRoute>
-
             } 
           />
-          <Route path="/my-bookings" element={<MyBookings />} />
-          <Route path="/event/:id" element={<EventDetails />} />
 
-          {/* Organizer Routes */}
-           
+          {/* --- PROTECTED ORGANIZER ROUTES --- */}
           <Route 
             path="/organizer-dashboard" 
             element={
@@ -62,16 +67,36 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/edit-event/:id" 
+            element={
+              <ProtectedRoute allowedRoles={['organizer', 'admin']}>
+                <EditEvent />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/create-event" 
+            element={
+              <ProtectedRoute allowedRoles={['organizer', 'admin']}>
+                <CreateEvent />
+              </ProtectedRoute>
+            } 
+          />
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLogin />} />
-<Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/create-event" element={<CreateEvent />} />
+          {/* --- PROTECTED ADMIN ROUTES --- */}
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
 
-          {/* Fallback for 404 */}
+          {/* Fallback */}
           <Route path="*" element={<h1 className="text-center mt-10 text-2xl">404 - Page Not Found</h1>} />
         </Routes>
-       
       </div>
     </Router>
   );

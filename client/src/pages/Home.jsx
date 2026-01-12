@@ -1,262 +1,322 @@
 // Import dependencies
-import { useEffect, useState } from 'react'; // React hooks for state and lifecycle
-import axios from 'axios'; // HTTP client for API requests
-import { Link, useNavigate } from 'react-router-dom'; // Router hooks and navigation link
-import { Ticket, Search } from 'lucide-react'; // Icons from lucide library
+import { useEffect, useState } from 'react'; // React hooks
+import axios from 'axios'; // HTTP client
+import { Link, useNavigate } from 'react-router-dom'; // Router hooks
+import { Ticket, Search, LogOut, User, Sparkles } from 'lucide-react'; // Icons
 
-
-// Skeleton loader while fetching data
+// Skeleton loader
 function EventCardSkeleton() {
-  return (
-    <div className="animate-pulse space-y-3"> {/* Pulsing animation */}
-      <div className="aspect-2/3 rounded-xl bg-linear-to-br from-gray-300 to-gray-200" /> {/* Dummy image */}
-      <div className="h-4 bg-gray-300 rounded w-4/5" /> {/* Dummy title */}
-      <div className="h-3 bg-gray-200 rounded w-full" /> {/* Dummy description */}
-      <div className="h-4 bg-gray-300 rounded w-1/3" /> {/* Dummy footer */}
-    </div>
-  );
+  return (
+    <div className="space-y-3 p-3 md:p-4 rounded-3xl bg-white shadow-sm border border-gray-100 h-full flex flex-col">
+      <div className="aspect-4/5 w-full rounded-2xl bg-linear-to-br from-gray-200 via-gray-300 to-gray-200 animate-pulse" />
+      <div className="space-y-2 mt-4 flex-1">
+        <div className="h-4 bg-gray-200 rounded-full w-3/4 animate-pulse" />
+        <div className="h-3 bg-gray-100 rounded-full w-full animate-pulse" />
+      </div>
+    </div>
+  );
 }
 
-
-// Component displayed when no events match filters
+// No Events State
 function NoEventsState({ resetFilters }) {
-  return (
-    <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center mb-6">
-        <span className="text-4xl">🎭</span> {/* Mask emoji icon */}
-      </div>
-      <h3 className="text-xl font-bold text-gray-800">
-        No events found {/* Message */}
-      </h3>
-      <p className="text-gray-500 mt-2 max-w-md">
-        We couldn't find any events matching your search or category.
-      </p>
-      <button
-        onClick={resetFilters} // Resets search and filters
-        className="mt-6 bg-black text-white px-6 py-2 rounded-full text-sm font-semibold hover:bg-gray-800 transition"
-      >
-        Clear Filters
-      </button>
-    </div>
-  );
+  return (
+    <div className="col-span-full flex flex-col items-center justify-center py-12 md:py-24 text-center px-4">
+      <div className="relative group">
+        <div className="absolute inset-0 bg-rose-500 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 rounded-full" />
+        <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full bg-white shadow-xl flex items-center justify-center mb-6 border border-gray-100">
+          <span className="text-4xl md:text-6xl transform group-hover:scale-110 transition-transform duration-300">🎭</span>
+        </div>
+      </div>
+      <h3 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">No events found</h3>
+      <p className="text-gray-500 mt-3 max-w-md text-base md:text-lg">
+        We couldn't find any events matching your search.
+      </p>
+      <button
+        onClick={resetFilters}
+        className="mt-8 bg-gray-900 text-white px-8 py-3 rounded-full font-bold hover:bg-black hover:shadow-lg hover:shadow-gray-400/30 transform hover:-translate-y-1 transition-all duration-300 w-full md:w-auto"
+      >
+        Clear Filters
+      </button>
+    </div>
+  );
 }
 
-
-// Main Home page component
+// Main Home Component
 export default function Home() {
-  const [events, setEvents] = useState([]); // All fetched events
-  const [filteredEvents, setFilteredEvents] = useState([]); // Events after filters are applied
-  const [loading, setLoading] = useState(true); // Loading state
-  
-  // Filters
-  const [searchQuery, setSearchQuery] = useState(""); // Search input text
-  const [selectedCategory, setSelectedCategory] = useState("All"); // Active category filter
+  const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+   
+  // Auth State
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const navigate = useNavigate(); // React Router navigation function
+  // Filters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
-  // Fetch approved events when the page loads
-  useEffect(() => {
-    const fetchApprovedEvents = async () => {
-      try {
+  const navigate = useNavigate();
+
+  // 1. Check Login Status on Mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token); 
+  }, []);
+
+  // 2. Fetch Events
+  useEffect(() => {
+    const fetchApprovedEvents = async () => {
+      try {
         //const { data } = await axios.get('http://localhost:5000/api/events'); 
-        const { data } = await axios.get('https://event-kqrm.onrender.com/api/events'); // Fetch all events
+         const { data } = await axios.get('https://event-kqrm.onrender.com/api/events');
         
-        const approved = data.filter(event => event.isApproved === true); // Only include approved events
-        setEvents(approved); // Set to state
-        setFilteredEvents(approved); // Also display initially
-      } catch (err) {
-        console.error('Error fetching events:', err); // Log fetch error
-      } finally {
-        setLoading(false); // Turn off loading animation
-      }
-    };
-    fetchApprovedEvents(); // Call fetch on component mount
-  }, []); // Empty dependency means only once on mount
+        const approved = data.filter(event => event.isApproved === true);
+        setEvents(approved);
+        setFilteredEvents(approved);
+      } catch (err) {
+        console.error('Error fetching events:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApprovedEvents();
+  }, []);
 
-  // Filtering Logic — reruns whenever search or category changes
-  useEffect(() => {
-    let result = events; // Start with all events
+  // 3. Filter Logic
+  useEffect(() => {
+    let result = events;
 
-    // Apply Search filter
-    if (searchQuery) {
-      const lowerQuery = searchQuery.toLowerCase(); // Convert search to lowercase
-      result = result.filter(event => 
-        event.title.toLowerCase().includes(lowerQuery) || // Match title
-        event.description.toLowerCase().includes(lowerQuery) // Match description
-      );
-    }
+    if (searchQuery) {
+      const lowerQuery = searchQuery.toLowerCase();
+      result = result.filter(event => 
+        event.title.toLowerCase().includes(lowerQuery) || 
+        event.description.toLowerCase().includes(lowerQuery)
+      );
+    }
 
-    // Apply Category filter
-    if (selectedCategory !== "All") {
-      result = result.filter(event => 
-        event.category && event.category.toLowerCase() === selectedCategory.toLowerCase()
-      );
-    }
+    if (selectedCategory !== "All") {
+      result = result.filter(event => 
+        event.category && event.category.toLowerCase() === selectedCategory.toLowerCase()
+      );
+    }
 
-    setFilteredEvents(result); // Update filtered events
-  }, [searchQuery, selectedCategory, events]); // Run when filters or event list change
+    setFilteredEvents(result);
+  }, [searchQuery, selectedCategory, events]);
 
-  const categories = ["All", "Events", "Plays", "Sports", "Activities"]; // Category navigation
+  // 4. Handle Logout Function
+  const handleLogout = () => {
+      localStorage.removeItem('token'); 
+      localStorage.removeItem('role'); 
+      setIsLoggedIn(false); 
+  };
 
-  // Main JSX structure
-  return (
-    <div className="bg-gray-100 min-h-screen font-sans"> {/* Page background */}
-      
-      {/* HEADER BAR */}
-      <header className="bg-white border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          
-          {/* LEFT SECTION: Logo and Search */}
-          <div className="flex items-center space-x-8 flex-1">
-            <h1 
-              className="text-2xl font-extrabold italic text-black cursor-pointer" 
-              onClick={() => {
-                setSearchQuery(""); // Clear search
-                setSelectedCategory("All"); // Reset category
-              }}
-            >
-              EventEase {/* Logo text */}
-            </h1>
-            
-            {/* Search Bar (visible on medium + screens) */}
-            <div className="relative hidden md:block w-96">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /> {/* Search icon */}
-                <input
-                  type="text"
-                  placeholder="Search events, shows, sports..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)} // Update state on typing
-                  className="w-full border rounded-full pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-black outline-none bg-gray-50 hover:bg-white transition-colors"
-                />
-            </div>
-          </div>
+  const categories = ["All", "Events", "Plays", "Sports", "Activities"];
 
-          {/* RIGHT SECTION: My Bookings button */}
-          <div className="flex items-center space-x-4">
-            <button 
-                onClick={() => navigate('/my-bookings')} // Go to bookings page
-                className="flex items-center space-x-2 bg-black text-white px-5 py-2 rounded-full font-medium hover:bg-gray-800 transition active:scale-95 shadow-lg shadow-gray-200"
-            >
-                <Ticket className="w-4 h-4" /> {/* Ticket icon */}
-                <span>My Bookings</span>
-            </button>
-          </div>
-        </div>
+  return (
+    <div className="bg-gray-50 min-h-screen font-sans selection:bg-rose-500 selection:text-white pb-20 md:pb-0">
+       
+      {/* HEADER BAR */}
+      <header className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50 transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
+          
+          <div className="flex items-center justify-between gap-4">
+            {/* Logo */}
+            <h1 
+              className="text-2xl md:text-3xl font-black italic tracking-tighter cursor-pointer bg-linear-to-r from-gray-900 via-gray-700 to-gray-900 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300 shrink-0" 
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedCategory("All");
+              }}
+            >
+              EventEase<span className="text-rose-500 not-italic">.</span>
+            </h1>
 
-        {/* CATEGORY NAV BAR */}
-        <div className="bg-linear-to-r from-[#2b3178] to-[#1f2437] border-t border-white/10">
-          <div className="max-w-7xl mx-auto px-4">
-            <nav className="flex items-center gap-8 py-3 text-sm font-medium overflow-x-auto no-scrollbar">
-              {categories.map((item) => ( // Map through category list
-                <button
-                  key={item}
-                  onClick={() => setSelectedCategory(item)} // Set selected category
-                  className={`relative cursor-pointer transition-all duration-200 whitespace-nowrap
-                    ${selectedCategory === item ? 'text-white scale-105 font-bold' : 'text-white/60 hover:text-white'}
-                  `}
-                >
-                  {item} {/* Category label text */}
-                  {selectedCategory === item && (
-                    <span className="absolute left-0 -bottom-3 w-full  bg-red-500 rounded-t-full"></span> // Highlight line 
-                  )}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-      </header>
+            {/* Auth Buttons */}
+            <div className="flex items-center space-x-2 md:space-x-5 shrink-0">
+              {isLoggedIn ? (
+                <>
+                  {/* === NEW PROFILE BUTTON === */}
+                  <button 
+                      onClick={() => navigate('/profile')} 
+                      className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-900 transition-all active:scale-95 shadow-xs"
+                      title="Profile"
+                  >
+                      <User className="w-4 h-4 md:w-5 md:h-5" />
+                  </button>
 
-      {/* HERO POSTER - Only visible if user is not searching */}
-      {!searchQuery && (
-        <section className="max-w-7xl mx-auto my-6 px-4 animate-fadeIn">
-          <div className="relative h-48 md:h-80 rounded-2xl overflow-hidden shadow-2xl group">
-            <img
-              src="/poster bg login.jpg" // Hero background image
-              alt="Banner"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-            />
-            <div className="absolute inset-0 bg-linear-to-r from-black/80 to-transparent" /> {/* Dark overlay left */}
-            <div className="absolute left-8 md:left-16 top-1/2 -translate-y-1/2 text-white max-w-lg">
-              <h2 className="text-3xl md:text-5xl font-extrabold leading-tight">
-                Relive the Best<br />Events of <span className="text-red-500">2026</span>
-              </h2>
-              <p className="mt-4 text-sm md:text-base text-gray-300 font-medium">
-                Concerts • Sports • Live Shows • Experiences
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
+                  <button 
+                      onClick={() => navigate('/my-bookings')} 
+                      className="flex items-center space-x-2 bg-gray-900 text-white px-3 py-2 md:px-6 md:py-2.5 rounded-full font-bold text-[10px] md:text-sm hover:bg-black transition-all shadow-lg shadow-gray-200"
+                  >
+                      <Ticket className="w-3 h-3 md:w-4 md:h-4" />
+                      <span className="hidden sm:inline">My Bookings</span>
+                  </button>
 
-      {/* MAIN CONTENT - Event Grid */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-end mb-8">
-          <div>
-              <h2 className="text-2xl font-black text-gray-800">
-                {searchQuery 
-                  ? `Search Results for "${searchQuery}"` // Show search header
-                  : (selectedCategory === 'All' ? 'Recommended Events' : selectedCategory)} {/* Default header */}
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Found {filteredEvents.length} results {/* Display total matches */}
-              </p>
-          </div>
-        </div>
+                  <button 
+                      onClick={handleLogout}
+                      className="p-2 md:px-4 md:py-2 text-gray-500 hover:text-rose-600 transition-colors"
+                  >
+                      <LogOut className="w-5 h-5" />
+                  </button>
+                </>
+              ) : (
+                <button 
+                    onClick={() => navigate('/login')} 
+                    className="relative overflow-hidden group flex items-center space-x-2 bg-linear-to-r from-rose-600 to-pink-600 text-white px-4 py-2 md:px-8 md:py-2.5 rounded-full font-bold hover:shadow-xl transition-all active:scale-95 text-xs md:text-sm"
+                >
+                    <User className="w-3 h-3 md:w-4 md:h-4" />
+                    <span>Login</span>
+                </button>
+              )}
+            </div>
+          </div>
 
-        {/* Event cards grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          {loading ? ( // Show skeleton while loading
-            Array.from({ length: 10 }).map((_, i) => (
-              <EventCardSkeleton key={i} /> // 10 placeholders
-            ))
-          ) : filteredEvents.length === 0 ? ( // If no events after filtering
-            <NoEventsState resetFilters={() => {setSearchQuery(""); setSelectedCategory("All");}} /> // Show empty state
-          ) : (
-            filteredEvents.map(event => ( // Loop through filtered events
-              <div
-                key={event._id}
-                className="group cursor-pointer transition transform hover:-translate-y-2 hover:shadow-xl rounded-xl duration-300"
-              >
-                <Link to={`/event/${event._id}`}> {/* Link to event details */}
-                <div className="relative aspect-2/3 rounded-xl overflow-hidden shadow-md">
-                  <img
-                    src={event.coverImage} // Event cover image
-                    alt={event.title}
-                    className="w-full h-full object-cover transition duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" /> {/* Overlay */}
+          {/* SEARCH BAR */}
+          <div className="mt-4 md:mt-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-96 group">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-rose-500 transition-colors" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full border border-gray-200 rounded-full pl-10 pr-6 py-2.5 md:py-3 text-sm font-medium bg-gray-50 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all duration-300 shadow-inner"
+              />
+            </div>
+          </div>
 
-                  {/* Category Tag */}
-                  <div className="absolute top-2 right-2 bg-white/20 backdrop-blur-md border border-white/30 text-white px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">
-                    {event.category || "Event"} {/* Show event category */}
-                  </div>
-                </div>
+        </div>
 
-                {/* Event Info */}
-                <div className="mt-4 space-y-1 px-1">
-                  <h3 className="font-bold text-gray-900 truncate text-lg group-hover:text-red-600 transition-colors">
-                    {event.title} {/* Event title */}
-                  </h3>
-                  <p className="text-gray-500 text-xs truncate font-medium">
-                    {event.description} {/* Short description */}
-                  </p>
-                  
-                  {/* Price and Buy button */}
-                  <div className="flex items-center justify-between pt-2">
-                    <p className="text-gray-900 font-black text-lg">
-                      ₹{event.price} {/* Price */}
-                    </p>
-                    <button className="bg-red-50 text-red-600 text-xs font-bold px-3 py-1 rounded-full group-hover:bg-red-600 group-hover:text-white transition-all">
-                        BUY {/* CTA button */}
-                    </button>
-                  </div>
-                </div>
-                </Link>
-              </div>
-            ))
-          )}
-        </div>
-      </main>
-    </div>
-  );
+        {/* CATEGORY NAV BAR */}
+        <div className="bg-[#1a1f36] border-t border-white/5 shadow-2xl">
+          <div className="max-w-7xl mx-auto px-4 md:px-6">
+            <nav className="flex items-center gap-2 py-3 overflow-x-auto no-scrollbar mask-gradient-right">
+              {categories.map((item) => (
+                <button
+                  key={item}
+                  onClick={() => setSelectedCategory(item)}
+                  className={`
+                    relative px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold transition-all duration-300 whitespace-nowrap snap-center
+                    ${selectedCategory === item 
+                      ? 'bg-white text-black shadow-lg shadow-white/10 scale-105' 
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'}
+                  `}
+                >
+                  {item}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+      </header>
+
+{/* HERO POSTER - Only visible if user is not searching */}
+      {!searchQuery && (
+        <section className="max-w-7xl mx-auto my-6 px-4 animate-fadeIn">
+          <div className="relative h-48 md:h-80 rounded-2xl overflow-hidden shadow-2xl group">
+            <img
+              src="/poster bg login.jpg" // Hero background image
+              alt="Banner"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            />
+            <div className="absolute inset-0 bg-linear-to-r from-black/80 to-transparent" /> {/* Dark overlay left */}
+            <div className="absolute left-8 md:left-16 top-1/2 -translate-y-1/2 text-white max-w-lg">
+              <h2 className="text-3xl md:text-5xl font-extrabold leading-tight">
+                Relive the Best<br />Events of <span className="text-yellow-200">2026</span>
+              </h2>
+              <p className="mt-4 text-sm md:text-base text-gray-300 font-medium">
+                Concerts • Sports • Live Shows • Experiences
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* MAIN CONTENT */}
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-12">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-6 md:mb-10 pb-4 border-b border-gray-200 gap-4">
+          <div>
+              <h2 className="text-2xl md:text-3xxl font-black text-gray-900 tracking-tight flex items-center gap-2 md:gap-3">
+                {searchQuery 
+                  ? `Search: "${searchQuery}"`
+                  : (selectedCategory === 'All' ? <> Recommended</> : selectedCategory)}
+              </h2>
+          </div>
+        </div>
+
+        {/* GRID: 
+            - grid-cols-2 (Mobile) 
+            - md:grid-cols-3 (Tablet) 
+            - lg:grid-cols-4 (Desktop) 
+            - xl:grid-cols-5 (Wide)
+        */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6 lg:gap-8">
+          {loading ? (
+            Array.from({ length: 10 }).map((_, i) => (
+              <EventCardSkeleton key={i} />
+            ))
+          ) : filteredEvents.length === 0 ? (
+            <NoEventsState resetFilters={() => {setSearchQuery(""); setSelectedCategory("All");}} />
+          ) : (
+            filteredEvents.map(event => (
+              <div
+                key={event._id}
+                className="group relative flex flex-col h-full bg-white rounded-2xl md:rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 border border-gray-100 hover:-translate-y-2 overflow-hidden cursor-pointer active:scale-98"
+              >
+                <Link to={`/event/${event._id}`} className="flex flex-col h-full">
+                
+                {/* IMAGE RATIO:
+                    - aspect-[4/5] is strictly enforced on the image container.
+                    - This ensures all cards have uniform height regardless of image size.
+                */}
+                <div className="relative w-full aspect-4/5 overflow-hidden bg-gray-100">
+                  <img
+                    src={event.coverImage}
+                    alt={event.title}
+                    className="w-full h-full object-cover transform transition-transform duration-700 ease-in-out group-hover:scale-110"
+                  />
+                  
+                  {/* Tag */}
+                  <div className="absolute top-2 left-2 md:top-4 md:left-4">
+                     <div className="bg-white/90 backdrop-blur-sm px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-wider text-gray-900 shadow-lg">
+                       {event.category || "Event"}
+                     </div>
+                  </div>
+                  
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                </div>
+
+                {/* Content */}
+                <div className="p-3 md:p-5 flex-1 flex flex-col">
+                  <div className="flex-1 space-y-1 md:space-y-2">
+                    <h3 className="font-bold text-gray-900 text-sm md:text-lg leading-tight line-clamp-2 group-hover:text-rose-600 transition-colors duration-300">
+                      {event.title}
+                    </h3>
+                    
+                    {/* DESCRIPTION:
+                        - line-clamp-2 ensures max 2 lines on ALL screens (PC & Mobile).
+                        - This prevents the card from stretching.
+                    */}
+                    <p className="text-gray-500 text-[10px] md:text-xs font-medium line-clamp-2 leading-relaxed">
+                      {event.description}
+                    </p>
+                  </div>
+                    
+                  <div className="mt-3 md:mt-4 pt-2 md:pt-4 border-t border-gray-50">
+                    <div>
+                        <p className="text-gray-400 text-[8px] md:text-[10px] font-bold uppercase tracking-wider">Starting</p>
+                        <p className="text-gray-900 font-black text-base md:text-xl tracking-tight">
+                        ₹{event.price}
+                        </p>
+                    </div>
+                  </div>
+                </div>
+                </Link>
+              </div>
+            ))
+          )}
+        </div>
+      </main>
+    </div>
+  );
 }

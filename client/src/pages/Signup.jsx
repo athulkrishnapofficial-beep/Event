@@ -54,7 +54,7 @@ export default function Signup() {
             <label className="block text-sm font-medium text-gray-700">Email (Gmail)</label>
             <input
               type="email" // Email input
-              placeholder="you@gmail.com"
+              placeholder="Enter your email id"
               className="w-full p-2 mt-1 border rounded focus:ring-2 focus:ring-black outline-none"
               onChange={(e) => setFormData({ ...formData, email: e.target.value })} // Update email in state
               required

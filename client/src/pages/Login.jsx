@@ -15,8 +15,8 @@ export default function Login() {
     e.preventDefault(); // Prevents page reload on form submission
     try {
       // Send POST request to backend for authentication
-      const { data } = await axios.post('https://event-kqrm.onrender.com/api/users/login', {
-      // const { data } = await axios.post('http://localhost:5000/api/users/login', { 
+       const { data } = await axios.post('https://event-kqrm.onrender.com/api/users/login', {
+       //const { data } = await axios.post('http://localhost:5000/api/users/login', { 
       
         email,  // User email
         password // User password
@@ -59,10 +59,10 @@ export default function Login() {
 
           {/* Email Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Gmail ID</label>
+            <label className="block text-sm font-medium text-gray-700">Email ID</label>
             <input 
               type="email"  // Input type: email
-              placeholder="you@gmail.com" // Placeholder example
+              placeholder="Enter your email id" // Placeholder example
               className="w-full p-2 mt-1 border rounded focus:ring-2 focus:ring-black outline-none" // Styling
               onChange={(e) => setEmail(e.target.value)} // Update email state
               required // Field validation

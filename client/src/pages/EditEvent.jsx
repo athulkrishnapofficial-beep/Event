@@ -25,7 +25,7 @@ export default function EditEvent() {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-       // const { data } = await axios.get(`http://localhost:5000/api/events/single/${id}`);
+        //const { data } = await axios.get(`http://localhost:5000/api/events/single/${id}`);
         const { data } = await axios.get(`https://event-kqrm.onrender.com/api/events/single/${id}`);
         
         // Format date for HTML input (YYYY-MM-DD)
