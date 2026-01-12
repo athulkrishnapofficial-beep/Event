@@ -4,25 +4,84 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom'; 
 import { Ticket, Search, LogOut, User } from 'lucide-react'; 
 
-// --- SKELETON LOADERS ---
-
-// 1. Hero Skeleton
-function HeroSkeleton() {
+// --- 1. HERO SKELETON (Only for the image part) ---
+function HeroImageSkeleton() {
   return (
-    <section className="max-w-7xl mx-auto my-6 px-4">
-      <div className="h-48 md:h-80 w-full rounded-2xl bg-gray-200 animate-pulse relative overflow-hidden">
-        {/* Optional: Shimmer effect overlay */}
-        <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
-      </div>
-    </section>
+    <div className="absolute inset-0 bg-gray-200 animate-pulse">
+        <div className="h-full w-full bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+    </div>
   );
 }
 
-// 2. Card Skeleton
-function EventCardSkeleton() {
+// --- 2. EVENT CARD (Text shows instantly, Image loads gracefully) ---
+function EventCard({ event }) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  return (
+    <div className="group relative flex flex-col h-full bg-white rounded-2xl md:rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 border border-gray-100 hover:-translate-y-2 overflow-hidden cursor-pointer active:scale-98">
+      <Link to={`/event/${event._id}`} className="flex flex-col h-full">
+        
+        {/* IMAGE CONTAINER */}
+        <div className="relative w-full aspect-4/5 overflow-hidden bg-gray-100">
+          
+          {/* Skeleton Overlay: Visible until imageLoaded is true */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 bg-gray-200 animate-pulse z-10" />
+          )}
+
+          {/* Actual Image */}
+          <img
+            src={event.coverImage}
+            alt={event.title}
+            loading="lazy"
+            decoding="async"
+            onLoad={() => setImageLoaded(true)}
+            className={`w-full h-full object-cover transform transition-all duration-700 ease-in-out group-hover:scale-110
+              ${imageLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-sm'}
+            `}
+          />
+          
+          {/* Tag */}
+          <div className="absolute top-2 left-2 md:top-4 md:left-4 z-20">
+            <div className="bg-white/90 backdrop-blur-sm px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-wider text-gray-900 shadow-lg">
+              {event.category || "Event"}
+            </div>
+          </div>
+          
+          {/* Hover Gradient */}
+          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
+        </div>
+
+        {/* CONTENT (Visible Immediately) */}
+        <div className="p-3 md:p-5 flex-1 flex flex-col">
+          <div className="flex-1 space-y-1 md:space-y-2">
+            <h3 className="font-bold text-gray-900 text-sm md:text-lg leading-tight line-clamp-2 group-hover:text-rose-600 transition-colors duration-300">
+              {event.title}
+            </h3>
+            <p className="text-gray-500 text-[10px] md:text-xs font-medium line-clamp-2 leading-relaxed">
+              {event.description}
+            </p>
+          </div>
+            
+          <div className="mt-3 md:mt-4 pt-2 md:pt-4 border-t border-gray-50">
+            <div>
+              <p className="text-gray-400 text-[8px] md:text-[10px] font-bold uppercase tracking-wider">Starting</p>
+              <p className="text-gray-900 font-black text-base md:text-xl tracking-tight">
+                ₹{event.price}
+              </p>
+            </div>
+          </div>
+        </div>
+      </Link>
+    </div>
+  );
+}
+
+// --- 3. GLOBAL LOADING STATE (For initial API fetch only) ---
+function GlobalLoadingSkeleton() {
   return (
     <div className="space-y-3 p-3 md:p-4 rounded-3xl bg-white shadow-sm border border-gray-100 h-full flex flex-col">
-      <div className="aspect-4/5 w-full rounded-2xl bg-linear-to-br from-gray-200 via-gray-300 to-gray-200 animate-pulse" />
+      <div className="aspect-4/5 w-full rounded-2xl bg-gray-200 animate-pulse" />
       <div className="space-y-2 mt-4 flex-1">
         <div className="h-4 bg-gray-200 rounded-full w-3/4 animate-pulse" />
         <div className="h-3 bg-gray-100 rounded-full w-full animate-pulse" />
@@ -31,63 +90,7 @@ function EventCardSkeleton() {
   );
 }
 
-// --- SUB-COMPONENTS ---
-
-// 3. Event Card (Handles its own image loading)
-function EventCard({ event }) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  return (
-    <>
-      {!imageLoaded && <EventCardSkeleton />}
-
-      <div 
-        className={`group relative flex-col h-full bg-white rounded-2xl md:rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 border border-gray-100 hover:-translate-y-2 overflow-hidden cursor-pointer active:scale-98 ${imageLoaded ? 'flex' : 'hidden'}`}
-      >
-        <Link to={`/event/${event._id}`} className="flex flex-col h-full">
-          <div className="relative w-full aspect-4/5 overflow-hidden bg-gray-100">
-            <img
-              src={event.coverImage}
-              alt={event.title}
-              loading="lazy"
-              onLoad={() => setImageLoaded(true)}
-              className="w-full h-full object-cover transform transition-transform duration-700 ease-in-out group-hover:scale-110"
-            />
-            
-            <div className="absolute top-2 left-2 md:top-4 md:left-4">
-              <div className="bg-white/90 backdrop-blur-sm px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-wider text-gray-900 shadow-lg">
-                {event.category || "Event"}
-              </div>
-            </div>
-            
-            <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          </div>
-
-          <div className="p-3 md:p-5 flex-1 flex flex-col">
-            <div className="flex-1 space-y-1 md:space-y-2">
-              <h3 className="font-bold text-gray-900 text-sm md:text-lg leading-tight line-clamp-2 group-hover:text-rose-600 transition-colors duration-300">
-                {event.title}
-              </h3>
-              <p className="text-gray-500 text-[10px] md:text-xs font-medium line-clamp-2 leading-relaxed">
-                {event.description}
-              </p>
-            </div>
-              
-            <div className="mt-3 md:mt-4 pt-2 md:pt-4 border-t border-gray-50">
-              <div>
-                <p className="text-gray-400 text-[8px] md:text-[10px] font-bold uppercase tracking-wider">Starting</p>
-                <p className="text-gray-900 font-black text-base md:text-xl tracking-tight">
-                  ₹{event.price}
-                </p>
-              </div>
-            </div>
-          </div>
-        </Link>
-      </div>
-    </>
-  );
-}
-
+// --- NO EVENTS STATE ---
 function NoEventsState({ resetFilters }) {
   return (
     <div className="col-span-full flex flex-col items-center justify-center py-12 md:py-24 text-center px-4">
@@ -115,15 +118,12 @@ function NoEventsState({ resetFilters }) {
 export default function Home() {
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Only for API fetch
   
   // Hero Image State
   const [heroLoaded, setHeroLoaded] = useState(false);
   
-  // Auth State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
@@ -138,7 +138,6 @@ export default function Home() {
     const fetchApprovedEvents = async () => {
       try {
         const { data } = await axios.get('https://event-kqrm.onrender.com/api/events');
-        
         const approved = data.filter(event => event.isApproved === true);
         setEvents(approved);
         setFilteredEvents(approved);
@@ -204,7 +203,7 @@ export default function Home() {
                 <>
                   <button 
                       onClick={() => navigate('/profile')} 
-                      className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-900 transition-all active:scale-95 shadow-xs"
+                      className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-300 hover:bg-gray-200 text-gray-900 transition-all active:scale-95 shadow-xs"
                       title="Profile"
                   >
                       <User className="w-4 h-4 md:w-5 md:h-5" />
@@ -238,16 +237,15 @@ export default function Home() {
           </div>
 
           {/* SEARCH BAR */}
-          <div className="mt-4 md:mt-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-96 group">
+          <div className="mt-4 md:mt-0 md:absolute md:left-1/2 md:top-9/32 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-96 group">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-rose-500 transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-rose-500 transition-colors" />
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full border border-gray-200 rounded-full pl-10 pr-6 py-2.5 md:py-3 text-sm font-medium bg-gray-50 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all duration-300 shadow-inner"
-              />
+                className="w-full border border-gray-400 rounded-full pl-10 pr-6 py-2 md:py-2.5 text-sm font-medium bg-gray-100 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all duration-300 shadow-inner"/>
             </div>
           </div>
         </div>
@@ -275,34 +273,37 @@ export default function Home() {
         </div>
       </header>
 
-      {/* --- HERO SECTION WITH LAZY LOADING --- */}
+      {/* --- HERO SECTION --- */}
       {!searchQuery && (
-        <>
-          {/* 1. Show Skeleton while loading */}
-          {!heroLoaded && <HeroSkeleton />}
+        <section className="max-w-7xl mx-auto my-6 px-4 animate-fadeIn">
+          <div className="relative h-48 md:h-80 rounded-2xl overflow-hidden shadow-2xl group bg-gray-900">
+            
+            {/* 1. Hero Skeleton Overlay */}
+            {!heroLoaded && <HeroImageSkeleton />}
 
-          {/* 2. Show Real Hero once loaded */}
-          <section className={`max-w-7xl mx-auto my-6 px-4 animate-fadeIn ${heroLoaded ? 'block' : 'hidden'}`}>
-            <div className="relative h-48 md:h-80 rounded-2xl overflow-hidden shadow-2xl group">
-              <img
-                src="/poster bg login.jpg"
-                alt="Banner"
-                loading="eager" // Load priority for hero
-                onLoad={() => setHeroLoaded(true)} // Trigger display
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-linear-to-r from-black/80 to-transparent" />
-              <div className="absolute left-8 md:left-16 top-1/2 -translate-y-1/2 text-white max-w-lg">
-                <h2 className="text-3xl md:text-5xl font-extrabold leading-tight">
-                  Relive the Best<br />Events of <span className="text-yellow-200">2026</span>
-                </h2>
-                <p className="mt-4 text-sm md:text-base text-gray-300 font-medium">
-                  Concerts • Sports • Live Shows • Experiences
-                </p>
-              </div>
+            {/* 2. Hero Image */}
+            <img
+              src="/poster bg login.jpg"
+              alt="Banner"
+              loading="eager" 
+              onLoad={() => setHeroLoaded(true)} 
+              className={`w-full h-full object-cover transition-all duration-1000 group-hover:scale-105
+                 ${heroLoaded ? 'opacity-100' : 'opacity-0'}
+              `}
+            />
+
+            {/* 3. Text (Visible Immediately over skeleton) */}
+            <div className="absolute inset-0 bg-linear-to-r from-black/80 to-transparent" />
+            <div className="absolute left-8 md:left-16 top-1/2 -translate-y-1/2 text-white max-w-lg z-10">
+              <h2 className="text-3xl md:text-5xl font-extrabold leading-tight">
+                Relive the Best<br />Events of <span className="text-yellow-200">2026</span>
+              </h2>
+              <p className="mt-4 text-sm md:text-base text-gray-300 font-medium">
+                Concerts • Sports • Live Shows • Experiences
+              </p>
             </div>
-          </section>
-        </>
+          </div>
+        </section>
       )}
 
       {/* MAIN CONTENT */}
@@ -320,12 +321,14 @@ export default function Home() {
         {/* GRID OF EVENTS */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6 lg:gap-8">
           {loading ? (
+            // Show Card Skeletons only while fetching JSON data
             Array.from({ length: 10 }).map((_, i) => (
-              <EventCardSkeleton key={i} />
+              <GlobalLoadingSkeleton key={i} />
             ))
           ) : filteredEvents.length === 0 ? (
             <NoEventsState resetFilters={() => {setSearchQuery(""); setSelectedCategory("All");}} />
           ) : (
+            // Render Cards (Images load independently now)
             filteredEvents.map(event => (
               <EventCard key={event._id} event={event} />
             ))
