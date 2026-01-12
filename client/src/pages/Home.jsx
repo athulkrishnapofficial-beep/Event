@@ -1,10 +1,24 @@
 // Import dependencies
-import { useEffect, useState } from 'react'; // React hooks
-import axios from 'axios'; // HTTP client
-import { Link, useNavigate } from 'react-router-dom'; // Router hooks
-import { Ticket, Search, LogOut, User, Sparkles } from 'lucide-react'; // Icons
+import { useEffect, useState } from 'react'; 
+import axios from 'axios'; 
+import { Link, useNavigate } from 'react-router-dom'; 
+import { Ticket, Search, LogOut, User } from 'lucide-react'; 
 
-// Skeleton loader
+// --- SKELETON LOADERS ---
+
+// 1. Hero Skeleton
+function HeroSkeleton() {
+  return (
+    <section className="max-w-7xl mx-auto my-6 px-4">
+      <div className="h-48 md:h-80 w-full rounded-2xl bg-gray-200 animate-pulse relative overflow-hidden">
+        {/* Optional: Shimmer effect overlay */}
+        <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+      </div>
+    </section>
+  );
+}
+
+// 2. Card Skeleton
 function EventCardSkeleton() {
   return (
     <div className="space-y-3 p-3 md:p-4 rounded-3xl bg-white shadow-sm border border-gray-100 h-full flex flex-col">
@@ -17,7 +31,63 @@ function EventCardSkeleton() {
   );
 }
 
-// No Events State
+// --- SUB-COMPONENTS ---
+
+// 3. Event Card (Handles its own image loading)
+function EventCard({ event }) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  return (
+    <>
+      {!imageLoaded && <EventCardSkeleton />}
+
+      <div 
+        className={`group relative flex-col h-full bg-white rounded-2xl md:rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 border border-gray-100 hover:-translate-y-2 overflow-hidden cursor-pointer active:scale-98 ${imageLoaded ? 'flex' : 'hidden'}`}
+      >
+        <Link to={`/event/${event._id}`} className="flex flex-col h-full">
+          <div className="relative w-full aspect-4/5 overflow-hidden bg-gray-100">
+            <img
+              src={event.coverImage}
+              alt={event.title}
+              loading="lazy"
+              onLoad={() => setImageLoaded(true)}
+              className="w-full h-full object-cover transform transition-transform duration-700 ease-in-out group-hover:scale-110"
+            />
+            
+            <div className="absolute top-2 left-2 md:top-4 md:left-4">
+              <div className="bg-white/90 backdrop-blur-sm px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-wider text-gray-900 shadow-lg">
+                {event.category || "Event"}
+              </div>
+            </div>
+            
+            <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          </div>
+
+          <div className="p-3 md:p-5 flex-1 flex flex-col">
+            <div className="flex-1 space-y-1 md:space-y-2">
+              <h3 className="font-bold text-gray-900 text-sm md:text-lg leading-tight line-clamp-2 group-hover:text-rose-600 transition-colors duration-300">
+                {event.title}
+              </h3>
+              <p className="text-gray-500 text-[10px] md:text-xs font-medium line-clamp-2 leading-relaxed">
+                {event.description}
+              </p>
+            </div>
+              
+            <div className="mt-3 md:mt-4 pt-2 md:pt-4 border-t border-gray-50">
+              <div>
+                <p className="text-gray-400 text-[8px] md:text-[10px] font-bold uppercase tracking-wider">Starting</p>
+                <p className="text-gray-900 font-black text-base md:text-xl tracking-tight">
+                  ₹{event.price}
+                </p>
+              </div>
+            </div>
+          </div>
+        </Link>
+      </div>
+    </>
+  );
+}
+
 function NoEventsState({ resetFilters }) {
   return (
     <div className="col-span-full flex flex-col items-center justify-center py-12 md:py-24 text-center px-4">
@@ -41,12 +111,15 @@ function NoEventsState({ resetFilters }) {
   );
 }
 
-// Main Home Component
+// --- MAIN HOME COMPONENT ---
 export default function Home() {
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-   
+  
+  // Hero Image State
+  const [heroLoaded, setHeroLoaded] = useState(false);
+  
   // Auth State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -56,18 +129,15 @@ export default function Home() {
 
   const navigate = useNavigate();
 
-  // 1. Check Login Status on Mount
   useEffect(() => {
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token); 
   }, []);
 
-  // 2. Fetch Events
   useEffect(() => {
     const fetchApprovedEvents = async () => {
       try {
-        //const { data } = await axios.get('http://localhost:5000/api/events'); 
-         const { data } = await axios.get('https://event-kqrm.onrender.com/api/events');
+        const { data } = await axios.get('https://event-kqrm.onrender.com/api/events');
         
         const approved = data.filter(event => event.isApproved === true);
         setEvents(approved);
@@ -81,7 +151,6 @@ export default function Home() {
     fetchApprovedEvents();
   }, []);
 
-  // 3. Filter Logic
   useEffect(() => {
     let result = events;
 
@@ -102,7 +171,6 @@ export default function Home() {
     setFilteredEvents(result);
   }, [searchQuery, selectedCategory, events]);
 
-  // 4. Handle Logout Function
   const handleLogout = () => {
       localStorage.removeItem('token'); 
       localStorage.removeItem('role'); 
@@ -117,8 +185,8 @@ export default function Home() {
       {/* HEADER BAR */}
       <header className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
-          
           <div className="flex items-center justify-between gap-4">
+            
             {/* Logo */}
             <h1 
               className="text-2xl md:text-3xl font-black italic tracking-tighter cursor-pointer bg-linear-to-r from-gray-900 via-gray-700 to-gray-900 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300 shrink-0" 
@@ -134,7 +202,6 @@ export default function Home() {
             <div className="flex items-center space-x-2 md:space-x-5 shrink-0">
               {isLoggedIn ? (
                 <>
-                  {/* === NEW PROFILE BUTTON === */}
                   <button 
                       onClick={() => navigate('/profile')} 
                       className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-900 transition-all active:scale-95 shadow-xs"
@@ -183,7 +250,6 @@ export default function Home() {
               />
             </div>
           </div>
-
         </div>
 
         {/* CATEGORY NAV BAR */}
@@ -209,26 +275,34 @@ export default function Home() {
         </div>
       </header>
 
-{/* HERO POSTER - Only visible if user is not searching */}
+      {/* --- HERO SECTION WITH LAZY LOADING --- */}
       {!searchQuery && (
-        <section className="max-w-7xl mx-auto my-6 px-4 animate-fadeIn">
-          <div className="relative h-48 md:h-80 rounded-2xl overflow-hidden shadow-2xl group">
-            <img
-              src="/poster bg login.jpg" // Hero background image
-              alt="Banner"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-            />
-            <div className="absolute inset-0 bg-linear-to-r from-black/80 to-transparent" /> {/* Dark overlay left */}
-            <div className="absolute left-8 md:left-16 top-1/2 -translate-y-1/2 text-white max-w-lg">
-              <h2 className="text-3xl md:text-5xl font-extrabold leading-tight">
-                Relive the Best<br />Events of <span className="text-yellow-200">2026</span>
-              </h2>
-              <p className="mt-4 text-sm md:text-base text-gray-300 font-medium">
-                Concerts • Sports • Live Shows • Experiences
-              </p>
+        <>
+          {/* 1. Show Skeleton while loading */}
+          {!heroLoaded && <HeroSkeleton />}
+
+          {/* 2. Show Real Hero once loaded */}
+          <section className={`max-w-7xl mx-auto my-6 px-4 animate-fadeIn ${heroLoaded ? 'block' : 'hidden'}`}>
+            <div className="relative h-48 md:h-80 rounded-2xl overflow-hidden shadow-2xl group">
+              <img
+                src="/poster bg login.jpg"
+                alt="Banner"
+                loading="eager" // Load priority for hero
+                onLoad={() => setHeroLoaded(true)} // Trigger display
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-linear-to-r from-black/80 to-transparent" />
+              <div className="absolute left-8 md:left-16 top-1/2 -translate-y-1/2 text-white max-w-lg">
+                <h2 className="text-3xl md:text-5xl font-extrabold leading-tight">
+                  Relive the Best<br />Events of <span className="text-yellow-200">2026</span>
+                </h2>
+                <p className="mt-4 text-sm md:text-base text-gray-300 font-medium">
+                  Concerts • Sports • Live Shows • Experiences
+                </p>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </>
       )}
 
       {/* MAIN CONTENT */}
@@ -243,12 +317,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* GRID: 
-            - grid-cols-2 (Mobile) 
-            - md:grid-cols-3 (Tablet) 
-            - lg:grid-cols-4 (Desktop) 
-            - xl:grid-cols-5 (Wide)
-        */}
+        {/* GRID OF EVENTS */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6 lg:gap-8">
           {loading ? (
             Array.from({ length: 10 }).map((_, i) => (
@@ -258,61 +327,7 @@ export default function Home() {
             <NoEventsState resetFilters={() => {setSearchQuery(""); setSelectedCategory("All");}} />
           ) : (
             filteredEvents.map(event => (
-              <div
-                key={event._id}
-                className="group relative flex flex-col h-full bg-white rounded-2xl md:rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 border border-gray-100 hover:-translate-y-2 overflow-hidden cursor-pointer active:scale-98"
-              >
-                <Link to={`/event/${event._id}`} className="flex flex-col h-full">
-                
-                {/* IMAGE RATIO:
-                    - aspect-[4/5] is strictly enforced on the image container.
-                    - This ensures all cards have uniform height regardless of image size.
-                */}
-                <div className="relative w-full aspect-4/5 overflow-hidden bg-gray-100">
-                  <img
-                    src={event.coverImage}
-                    alt={event.title}
-                    className="w-full h-full object-cover transform transition-transform duration-700 ease-in-out group-hover:scale-110"
-                  />
-                  
-                  {/* Tag */}
-                  <div className="absolute top-2 left-2 md:top-4 md:left-4">
-                     <div className="bg-white/90 backdrop-blur-sm px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-wider text-gray-900 shadow-lg">
-                       {event.category || "Event"}
-                     </div>
-                  </div>
-                  
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                </div>
-
-                {/* Content */}
-                <div className="p-3 md:p-5 flex-1 flex flex-col">
-                  <div className="flex-1 space-y-1 md:space-y-2">
-                    <h3 className="font-bold text-gray-900 text-sm md:text-lg leading-tight line-clamp-2 group-hover:text-rose-600 transition-colors duration-300">
-                      {event.title}
-                    </h3>
-                    
-                    {/* DESCRIPTION:
-                        - line-clamp-2 ensures max 2 lines on ALL screens (PC & Mobile).
-                        - This prevents the card from stretching.
-                    */}
-                    <p className="text-gray-500 text-[10px] md:text-xs font-medium line-clamp-2 leading-relaxed">
-                      {event.description}
-                    </p>
-                  </div>
-                    
-                  <div className="mt-3 md:mt-4 pt-2 md:pt-4 border-t border-gray-50">
-                    <div>
-                        <p className="text-gray-400 text-[8px] md:text-[10px] font-bold uppercase tracking-wider">Starting</p>
-                        <p className="text-gray-900 font-black text-base md:text-xl tracking-tight">
-                        ₹{event.price}
-                        </p>
-                    </div>
-                  </div>
-                </div>
-                </Link>
-              </div>
+              <EventCard key={event._id} event={event} />
             ))
           )}
         </div>
