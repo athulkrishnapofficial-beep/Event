@@ -25,20 +25,24 @@ export default function ContactSupport() {
   };
 
   // Handle Submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setStatus('sending');
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setStatus('sending');
 
-    try {
-      await axios.post('http://localhost:5000/api/messages/submit', formData);
-      
-      setStatus('success');
-      setFormData({ name: '', email: '', subject: '', message: '' }); // Reset form
-    } catch (error) {
-      console.error("Error sending message:", error);
-      setStatus('error');
-    }
-  };
+  try {
+    const baseUrl = 'https://event-kqrm.onrender.com';
+    // const baseUrl = 'http://localhost:5000';
+
+    // --- FIX: UNCOMMENT THIS LINE ---
+    await axios.post(`${baseUrl}/api/support`, formData);
+    
+    setStatus('success');
+    setFormData({ name: '', email: '', subject: '', message: '' }); 
+  } catch (error) {
+    console.error("Error sending message:", error);
+    setStatus('error');
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">

@@ -10,7 +10,7 @@ const authRoutes = require("./routes/userRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const paymentRoutes = require("./routes/paymentRoutes"); // Import payment routes
 const bookingRoutes = require("./routes/bookingRoutes"); // Import booking routes
-const messageRoutes = require("./routes/messageRoutes"); // Import message routes
+const messageRoutes = require("./routes/supportRoutes"); // Import message routes
 
 // 2. Initialize App (CRITICAL: This must be before app.use)
 const app = express();
