@@ -23,7 +23,7 @@ export default function EventDetails() {
     const fetchEvent = async () => {
       try {
         const baseUrl = 'https://event-1-ie8k.onrender.com';
-        // const baseUrl = 'http://localhost:5000'; // Toggle for local testing
+        //const baseUrl = 'http://localhost:5000'; // Toggle for local testing
         
         const { data } = await axios.get(`${baseUrl}/api/events/single/${id}`);
         setEvent(data);
@@ -69,7 +69,7 @@ export default function EventDetails() {
 
     try {
       const baseUrl = 'https://event-1-ie8k.onrender.com';
-      // const baseUrl = 'http://localhost:5000';
+      //const baseUrl = 'http://localhost:5000';
 
       // 3. API Call
       // You need a backend route like POST /api/events/interest/:id
@@ -98,7 +98,7 @@ export default function EventDetails() {
 
     try {
       const baseUrl = 'https://event-1-ie8k.onrender.com';
-      // const baseUrl = 'http://localhost:5000';
+      //const baseUrl = 'http://localhost:5000';
       
       const orderResponse = await axios.post(
         `${baseUrl}/api/payments/order`,

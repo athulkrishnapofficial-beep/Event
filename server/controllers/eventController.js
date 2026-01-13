@@ -45,7 +45,6 @@ exports.createEvent = async (req, res) => {
       category 
     } = req.body;
 
-  
     const total = totalTickets || availableTickets;
 
     // Validation
@@ -69,7 +68,7 @@ exports.createEvent = async (req, res) => {
       
       coverImage: req.file ? req.file.path : "",
       category: category || 'Events',
-            organizer: req.user.id 
+      organizer: req.user.id 
     });
 
     await newEvent.save();
@@ -107,5 +106,41 @@ exports.deleteEvent = async (req, res) => {
     res.status(200).json({ message: "Event deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// --- NEW FUNCTION ADDED HERE ---
+// 4. Toggle Interest (Like/Unlike Event) - FIXED VERSION
+exports.toggleInterest = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    const userId = req.user.id;
+
+    // CHECK: Does this user exist in the likes array?
+    const userLikeIndex = event.likes.findIndex(id => id.toString() === userId.toString());
+
+    if (userLikeIndex > -1) {
+      // User ALREADY liked it -> REMOVE them (Unlike)
+      event.likes.splice(userLikeIndex, 1);
+    } else {
+      // User has NOT liked it -> ADD them (Like)
+      event.likes.push(userId);
+    }
+
+    const updatedEvent = await event.save();
+    
+    res.status(200).json({
+      message: userLikeIndex > -1 ? "Unliked successfully" : "Liked successfully",
+      likes: updatedEvent.likes,
+      likeCount: updatedEvent.likes.length
+    });
+  } catch (error) {
+    console.error("Toggle Interest Error:", error);
+    res.status(500).json({ message: "Server Error" });
   }
 };
