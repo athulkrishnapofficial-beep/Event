@@ -7,6 +7,22 @@ import {
 } from 'lucide-react';
 import { Link } from "react-router-dom";
 
+// Function to decode JWT and extract userId
+const extractUserIdFromToken = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    const decoded = JSON.parse(jsonPayload);
+    return decoded.id; // JWT contains 'id' field from backend
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return null;
+  }
+};
+
 export default function EventDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -32,36 +48,29 @@ export default function EventDetails() {
         const count = data.likes ? data.likes.length : 0;
         setInterestCount(count);
 
-        // 2. Get user info
+        // 2. Get user info from token
         const token = localStorage.getItem('token');
-        const userId = localStorage.getItem('userId');
+        let userId = localStorage.getItem('userId');
         
-        console.log('Debug - userId from localStorage:', userId);
+        // If userId not in localStorage, extract from token
+        if (token && !userId) {
+          userId = extractUserIdFromToken(token);
+          // Store it for future use
+          if (userId) {
+            localStorage.setItem('userId', userId);
+          }
+        }
+        
+        console.log('Debug - userId from localStorage or token:', userId);
         console.log('Debug - likes from backend:', data.likes);
         
         // Verify if current user has already liked this event
         if (token && userId && data.likes && Array.isArray(data.likes)) {
-          const isUserLiked = data.likes.some(likeItem => {
-            // Handle if 'likeItem' is just an ID string OR an ObjectId
-            let likeIdString = '';
-            
-            if (typeof likeItem === 'object' && likeItem !== null && likeItem._id) {
-              // If it's an object with _id property
-              likeIdString = String(likeItem._id);
-            } else if (typeof likeItem === 'string') {
-              // If it's already a string
-              likeIdString = likeItem;
-            } else if (likeItem && likeItem.toString) {
-              // If it has a toString method (ObjectId)
-              likeIdString = likeItem.toString();
-            }
-            
+          const isUserLiked = data.likes.some(likeId => {
+            // Simple string comparison since both should be strings now
+            const likeIdString = String(likeId);
             const userIdString = String(userId);
-            const matches = likeIdString === userIdString;
-            
-            console.log('Debug - Comparing:', { likeIdString, userIdString, matches });
-            
-            return matches;
+            return likeIdString === userIdString;
           });
           
           console.log('Debug - isUserLiked result:', isUserLiked);
