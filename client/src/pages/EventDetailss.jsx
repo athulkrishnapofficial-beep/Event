@@ -36,12 +36,16 @@ export default function EventDetails() {
         const token = localStorage.getItem('token');
         const userId = localStorage.getItem('userId');
         
-        // data.likes contains user IDs, check if current userId is in the array
+        // Verify if current user has already liked this event
         if (token && userId && data.likes && Array.isArray(data.likes)) {
-          const isUserLiked = data.likes.some(likeId => 
-            likeId === userId || likeId._id === userId || likeId.toString() === userId
-          );
+          const isUserLiked = data.likes.some(likeId => {
+            // Compare the like ID (can be string or object) with user ID
+            const likeIdStr = typeof likeId === 'object' ? likeId._id || likeId.toString() : likeId;
+            return likeIdStr === userId || likeIdStr.toString() === userId;
+          });
           setIsInterested(isUserLiked);
+        } else {
+          setIsInterested(false);
         }
 
       } catch (err) {
@@ -384,7 +388,7 @@ export default function EventDetails() {
                  >
                     {isInterested ? (
                         <span className="flex items-center justify-center gap-2">
-                             <CheckCircle className="w-4 h-4" /> Marked as Interested
+                             <Heart className="w-4 h-4 fill-white" /> Already Liked
                         </span>
                     ) : (
                         "Mark as Interested"
