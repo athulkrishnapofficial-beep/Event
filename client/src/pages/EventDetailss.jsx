@@ -260,7 +260,7 @@ export default function EventDetails() {
           <div className="lg:col-span-8 space-y-8">
             
             {/* Hero Image Section */}
-            <div className="relative rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[21/9] bg-gray-200 group">
+            <div className="relative rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-21/9 bg-gray-200 group">
               <img 
                 src={event.coverImage} 
                 alt={event.title} 
@@ -305,7 +305,7 @@ export default function EventDetails() {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Location</p>
-                    <p className="text-gray-900 font-semibold mt-0.5 truncate max-w-[150px]">
+                    <p className="text-gray-900 font-semibold mt-0.5 truncate max-w-37.5">
                       {event.location}
                     </p>
                   </div>
