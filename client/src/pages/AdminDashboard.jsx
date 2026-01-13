@@ -39,8 +39,8 @@ export default function AdminDashboard() {
   const approveEvent = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/admin/approve-event/${id}`, {}, {
-      //await axios.put(`https://event-kqrm.onrender.com/api/admin/approve-event/${id}`, {}, {
+      //await axios.put(`http://localhost:5000/api/admin/approve-event/${id}`, {}, {
+      await axios.put(`https://event-kqrm.onrender.com/api/admin/approve-event/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert("Event Approved!");
@@ -54,8 +54,8 @@ export default function AdminDashboard() {
     if (window.confirm("Are you sure you want to unapprove this event? It will no longer be visible to users.")) {
       try {
         const token = localStorage.getItem('token');
-        await axios.put(`http://localhost:5000/api/admin/unapprove-event/${id}`, {}, {
-        //await axios.put(`https://event-kqrm.onrender.com/api/admin/unapprove-event/${id}`, {}, {
+        //await axios.put(`http://localhost:5000/api/admin/unapprove-event/${id}`, {}, {
+        await axios.put(`https://event-kqrm.onrender.com/api/admin/unapprove-event/${id}`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
         alert("Event Unapproved!");
