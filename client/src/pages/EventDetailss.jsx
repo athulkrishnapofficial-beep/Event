@@ -1,25 +1,46 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Calendar, MapPin, Ticket, ShieldCheck, Star } from 'lucide-react';
+import { 
+  ArrowLeft, Calendar, MapPin, Ticket, ShieldCheck, 
+  Heart, Clock, Info, CheckCircle // Changed Star to Heart
+} from 'lucide-react';
+import { Link } from "react-router-dom";
 
 export default function EventDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation(); // Hook to get current URL for redirecting back later
+  const location = useLocation();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch event details
+  // --- NEW STATE FOR INTEREST FUNCTIONALITY ---
+  const [isInterested, setIsInterested] = useState(false);
+  const [interestCount, setInterestCount] = useState(0);
+
+  // Fetch Event Data
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        // Switch between localhost and production automatically based on env or manual toggle
-        //const baseUrl = 'http://localhost:5000'; 
-         const baseUrl = 'https://event-1-ie8k.onrender.com';
+        const baseUrl = 'https://event-1-ie8k.onrender.com';
+        // const baseUrl = 'http://localhost:5000'; // Toggle for local testing
         
         const { data } = await axios.get(`${baseUrl}/api/events/single/${id}`);
         setEvent(data);
+        
+        // Initialize Interest Data
+        // Assuming your backend returns an array of user IDs in 'likes' or a number in 'interestedCount'
+        // Adjust 'data.likes' based on your actual backend response structure
+        const count = data.likes ? data.likes.length : (data.interestedCount || 0);
+        setInterestCount(count);
+
+        // Check if current user is interested
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId'); // Assuming you store userId on login
+        if (token && userId && data.likes && data.likes.includes(userId)) {
+          setIsInterested(true);
+        }
+
       } catch (err) {
         console.error("Error fetching event:", err);
       } finally {
@@ -29,33 +50,63 @@ export default function EventDetails() {
     fetchEvent();
   }, [id]);
 
-  // Handle Payment / Booking Logic
-  const handlePayment = async () => {
+  // --- HANDLER: MARK AS INTERESTED ---
+  const handleInterest = async () => {
     const token = localStorage.getItem('token');
-
-    // --- LAZY REGISTRATION CHECK ---
+    
+    // 1. Auth Check
     if (!token) {
-      // User is NOT logged in.
-      // Redirect to Login, but pass "state" so we know where to come back to.
-          navigate('/login', { state: { from: location.pathname } }); 
+      navigate('/login', { state: { from: location.pathname } });
       return;
     }
 
-    // --- IF LOGGED IN, PROCEED WITH RAZORPAY ---
-    try {
-      //const baseUrl = 'http://localhost:5000'; // Match your fetch URL above
-       const baseUrl = 'https://event-1-ie8k.onrender.com';
+    // 2. Optimistic UI Update (Update screen instantly before API finishes)
+    const previousState = isInterested;
+    const previousCount = interestCount;
 
-      // 1. Create Order
+    setIsInterested(!previousState);
+    setInterestCount(prev => previousState ? prev - 1 : prev + 1);
+
+    try {
+      const baseUrl = 'https://event-1-ie8k.onrender.com';
+      // const baseUrl = 'http://localhost:5000';
+
+      // 3. API Call
+      // You need a backend route like POST /api/events/interest/:id
+      await axios.put(
+        `${baseUrl}/api/events/interest/${event._id}`,
+        {}, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+    } catch (error) {
+      console.error("Failed to update interest:", error);
+      // Revert UI if API fails
+      setIsInterested(previousState);
+      setInterestCount(previousCount);
+      alert("Something went wrong. Please try again.");
+    }
+  };
+
+  // --- HANDLER: PAYMENT (UNCHANGED) ---
+  const handlePayment = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
+
+    try {
+      const baseUrl = 'https://event-1-ie8k.onrender.com';
+      // const baseUrl = 'http://localhost:5000';
+      
       const orderResponse = await axios.post(
         `${baseUrl}/api/payments/order`,
         { amount: event.price, eventId: event._id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       const order = orderResponse.data;
 
-      // 2. Razorpay Options
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
@@ -72,8 +123,6 @@ export default function EventDetails() {
               eventId: event._id,
               amount: event.price
             };
-
-            // 3. Verify Payment
             const verifyResponse = await axios.post(
               `${baseUrl}/api/payments/verify`,
               verifyData,
@@ -100,148 +149,239 @@ export default function EventDetails() {
     }
   };
 
-  // Loading State
+  // Modern Loading State
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="animate-pulse flex flex-col items-center">
-        <div className="h-12 w-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-gray-500 font-medium">Loading Event Details...</p>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="relative">
+          <div className="h-16 w-16 border-4 border-gray-200 rounded-full"></div>
+          <div className="h-16 w-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+        </div>
+        <p className="text-gray-500 font-medium animate-pulse">Loading Event...</p>
       </div>
     </div>
   );
 
-  // Not Found State
+  // Modern Not Found State
   if (!event) return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
-      <h2 className="text-2xl font-bold text-gray-800">Event Not Found</h2>
-      <button onClick={() => navigate('/')} className="mt-4 text-red-600 font-semibold underline">Go Back Home</button>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4 text-center">
+      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full">
+        <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Info className="w-8 h-8 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Event Not Found</h2>
+        <p className="text-gray-500 mb-6">The event you are looking for might have been removed.</p>
+        <button 
+          onClick={() => navigate('/')} 
+          className="w-full bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition-colors"
+        >
+          Return to Home
+        </button>
+      </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-20 font-sans">
-      {/* Navbar / Header */}
-      <div className="bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-12">
+      
+      {/* Navigation Bar */}
+      <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <button 
             onClick={() => navigate('/')} 
-            className="flex items-center text-gray-600 hover:text-red-600 transition-colors font-semibold group"
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors group p-2 -ml-2 rounded-lg hover:bg-gray-100"
           >
             <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-            Back to Explore
+            <span className="font-medium">Back</span>
           </button>
           
-          {/* Optional: Show Login button here if user is not logged in */}
+          <div className="text-sm font-semibold text-gray-400 hidden sm:block">
+            Event Details
+          </div>
+
           {!localStorage.getItem('token') && (
              <button 
                onClick={() => navigate('/login', { state: { from: location.pathname } })}
-               className="text-sm font-bold text-red-600 border border-red-200 px-4 py-2 rounded-full hover:bg-red-50"
+               className="text-sm font-semibold text-red-600 px-4 py-2 rounded-full hover:bg-red-50 transition-colors"
              >
-               Login to Book
+               Sign In
              </button>
           )}
         </div>
-      </div>
+      </nav>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           
-          {/* Left Column: Image & Details */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="relative group overflow-hidden rounded-3xl shadow-2xl">
+          {/* LEFT COLUMN: Content */}
+          <div className="lg:col-span-8 space-y-8">
+            
+            {/* Hero Image Section */}
+            <div className="relative rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[21/9] bg-gray-200 group">
               <img 
                 src={event.coverImage} 
                 alt={event.title} 
-                className="w-full h-125 object-cover group-hover:scale-105 transition-transform duration-700"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out"
               />
-              <div className="absolute bottom-6 left-6 bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-xl flex items-center shadow-lg">
-                <Star className="w-5 h-5 mr-2 text-yellow-400 fill-yellow-400" />
-                <span className="font-bold">4.8</span>
-                <span className="text-gray-300 ml-1 text-xs">(2.4k Reviews)</span>
+              
+              {/* --- CHANGED: Interested Badge instead of Rating --- */}
+              <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-gray-900 px-3 py-1.5 rounded-full text-sm font-bold shadow-sm flex items-center gap-1.5">
+                <Heart className={`w-4 h-4 ${isInterested ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
+                {interestCount} Interested
               </div>
             </div>
 
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-              <h1 className="text-5xl font-black text-gray-900 mb-6 tracking-tight">{event.title}</h1>
+            {/* Title & Key Details Mobile */}
+            <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100">
+              <div className="flex flex-col gap-4 mb-8">
+                <span className="inline-block w-fit px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold uppercase tracking-wider">
+                  Featured Event
+                </span>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">
+                  {event.title}
+                </h1>
+              </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 py-8 border-y border-gray-100">
-                <div className="flex items-center">
-                  <div className="bg-red-50 p-3 rounded-2xl mr-4">
-                    <Calendar className="w-6 h-6 text-red-600" />
+              {/* Info Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-6 border-y border-gray-100">
+                <div className="flex items-start space-x-4">
+                  <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
+                    <Calendar className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Date</p>
-                    {/* Ensure you format the date properly if it's an ISO string */}
-                    <p className="font-bold text-gray-800 text-sm italic">
-                      {new Date(event.date).toLocaleDateString()}
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Date</p>
+                    <p className="text-gray-900 font-semibold mt-0.5">
+                      {new Date(event.date).toLocaleDateString(undefined, {
+                        weekday: 'short', month: 'long', day: 'numeric'
+                      })}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center">
-                  <div className="bg-red-50 p-3 rounded-2xl mr-4">
-                    <MapPin className="w-6 h-6 text-red-600" />
+                <div className="flex items-start space-x-4">
+                  <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl shrink-0">
+                    <MapPin className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Location</p>
-                    <p className="font-bold text-gray-800 text-sm">{event.location}</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Location</p>
+                    <p className="text-gray-900 font-semibold mt-0.5 truncate max-w-[150px]">
+                      {event.location}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-center">
-                  <div className="bg-red-50 p-3 rounded-2xl mr-4">
-                    <Ticket className="w-6 h-6 text-red-600" />
+                <div className="flex items-start space-x-4">
+                  <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0">
+                    <Ticket className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Available</p>
-                    <p className="font-bold text-gray-800 text-sm">{event.availableTickets} Slots</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Availability</p>
+                    <p className="text-gray-900 font-semibold mt-0.5">
+                      {event.availableTickets > 0 ? `${event.availableTickets} Seats Left` : 'Sold Out'}
+                    </p>
                   </div>
                 </div>
               </div>
 
+              {/* Description */}
               <div className="mt-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Description</h2>
-                <p className="text-gray-600 leading-relaxed text-lg whitespace-pre-line bg-gray-50/50 p-6 rounded-2xl italic">
-                  {event.description}
-                </p>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">About this Event</h3>
+                <div className="prose prose-gray max-w-none">
+                  <p className="text-gray-600 leading-relaxed whitespace-pre-line text-lg">
+                    {event.description}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Pricing & Action */}
-          <div className="lg:col-span-1">
-            <div className="bg-white p-8 rounded-4xl shadow-2xl border border-gray-50 sticky top-28 overflow-hidden">
-              <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-black px-4 py-1 rounded-bl-xl uppercase tracking-tighter">
-                Filling Fast
-              </div>
-
-              <div className="flex justify-between items-baseline mb-8">
-                <h3 className="text-gray-400 font-bold uppercase text-xs tracking-widest">Total Price</h3>
-                <span className="text-4xl font-black text-gray-900 tracking-tighter">₹{event.price}</span>
-              </div>
-
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center text-sm text-green-700 font-bold bg-green-50 p-4 rounded-2xl border border-green-100">
-                  <ShieldCheck className="w-5 h-5 mr-3 shrink-0" />
-                  Secure Checkout Guaranteed
+          {/* RIGHT COLUMN: Sticky Pricing & Action */}
+          <div className="lg:col-span-4">
+            <div className="sticky top-24 space-y-6">
+              
+              <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+                <div className="bg-gray-900 p-6 text-white text-center relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-800 to-black opacity-50"></div>
+                  <div className="relative z-10">
+                    <p className="text-sm text-gray-300 font-medium uppercase tracking-widest mb-1">Total Price</p>
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-4xl font-black">₹{event.price}</span>
+                      <span className="text-gray-400 text-sm font-normal">/ person</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-[11px] text-gray-400 text-center px-4 leading-tight">
-                  By clicking "Book Now" you agree to our 100% Buyer Protection Policy.
-                </p>
+
+                <div className="p-6 sm:p-8">
+                  <div className="space-y-4 mb-8">
+                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <ShieldCheck className="w-5 h-5 text-green-500 shrink-0" />
+                      <span>Secure payment via Razorpay</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <Clock className="w-5 h-5 text-blue-500 shrink-0" />
+                      <span>Instant confirmation</span>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={handlePayment}
+                    disabled={event.availableTickets <= 0}
+                    className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-[0.98] 
+                      ${event.availableTickets > 0 
+                        ? 'bg-red-600 text-white hover:bg-red-700 hover:shadow-red-500/30' 
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                  >
+                    {event.availableTickets > 0 ? 'Book Ticket Now' : 'Sold Out'}
+                  </button>
+
+                  <p className="text-xs text-center text-gray-400 mt-4">
+                    By booking, you agree to our Terms & Conditions.
+                  </p>
+                </div>
               </div>
 
-              <button 
-                onClick={handlePayment}
-                className="w-full bg-red-600 text-white py-5 rounded-2xl font-black text-xl hover:bg-red-700 hover:shadow-2xl hover:shadow-red-200 transition-all active:scale-[0.98] uppercase tracking-wider"
-              >
-                Book Tickets Now
-              </button>
-
-              <div className="mt-8 pt-8 border-t border-gray-100 flex items-center justify-center space-x-4 grayscale opacity-40">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" className="h-4" alt="paypal" />
-                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" className="h-6" alt="mastercard" />
-                <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" className="h-3" alt="visa" />
+              {/* Support Contact */}
+              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-gray-900 text-sm">Have questions?</p>
+                  <p className="text-xs text-gray-500 mt-1">Contact the organizer</p>
+                </div>
+                <Link
+                  to="/contact-support"
+                  className="text-sm font-semibold text-gray-600 hover:text-gray-900 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Contact
+                </Link>
               </div>
+
+              {/* --- NEW: INTERESTED BUTTON SECTION --- */}
+              <div className="bg-pink-50 rounded-2xl p-5 border border-pink-100 shadow-sm">
+                 <div className="flex items-center justify-between mb-3">
+                     <div>
+                        <p className="font-bold text-gray-900 text-sm">Interested?</p>
+                        <p className="text-xs text-gray-500 mt-1">Save it for later</p>
+                     </div>
+                     <Heart className={`w-6 h-6 ${isInterested ? "fill-pink-500 text-pink-500" : "text-gray-400"}`} />
+                 </div>
+                 
+                 <button
+                    onClick={handleInterest}
+                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 border
+                      ${isInterested 
+                        ? 'bg-pink-600 text-white border-pink-600 hover:bg-pink-700 shadow-md shadow-pink-200' 
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-pink-300 hover:text-pink-600'
+                      }`}
+                 >
+                    {isInterested ? (
+                        <span className="flex items-center justify-center gap-2">
+                             <CheckCircle className="w-4 h-4" /> Marked as Interested
+                        </span>
+                    ) : (
+                        "Mark as Interested"
+                    )}
+                 </button>
+              </div>
+
             </div>
           </div>
 
