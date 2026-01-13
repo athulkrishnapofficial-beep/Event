@@ -29,16 +29,19 @@ export default function EventDetails() {
         setEvent(data);
         
         // Initialize Interest Data
-        // Assuming your backend returns an array of user IDs in 'likes' or a number in 'interestedCount'
-        // Adjust 'data.likes' based on your actual backend response structure
-        const count = data.likes ? data.likes.length : (data.interestedCount || 0);
+        const count = data.likes ? data.likes.length : 0;
         setInterestCount(count);
 
         // Check if current user is interested
         const token = localStorage.getItem('token');
-        const userId = localStorage.getItem('userId'); // Assuming you store userId on login
-        if (token && userId && data.likes && data.likes.includes(userId)) {
-          setIsInterested(true);
+        const userId = localStorage.getItem('userId');
+        
+        // data.likes contains user IDs, check if current userId is in the array
+        if (token && userId && data.likes && Array.isArray(data.likes)) {
+          const isUserLiked = data.likes.some(likeId => 
+            likeId === userId || likeId._id === userId || likeId.toString() === userId
+          );
+          setIsInterested(isUserLiked);
         }
 
       } catch (err) {
@@ -72,12 +75,19 @@ export default function EventDetails() {
       //const baseUrl = 'http://localhost:5000';
 
       // 3. API Call
-      // You need a backend route like POST /api/events/interest/:id
-      await axios.put(
+      const { data } = await axios.put(
         `${baseUrl}/api/events/interest/${event._id}`,
         {}, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
+      // 4. Update state with API response
+      if (data.isLiked !== undefined) {
+        setIsInterested(data.isLiked);
+      }
+      if (data.likeCount !== undefined) {
+        setInterestCount(data.likeCount);
+      }
       
     } catch (error) {
       console.error("Failed to update interest:", error);

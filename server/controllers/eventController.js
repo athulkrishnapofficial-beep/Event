@@ -113,34 +113,44 @@ exports.deleteEvent = async (req, res) => {
 // 4. Toggle Interest (Like/Unlike Event) - FIXED VERSION
 exports.toggleInterest = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const event = await Event.findById(id);
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
 
-    const userId = req.user.id;
+    // Check if user already liked this event
+    const userLiked = event.likes.some(likeId => likeId.toString() === userId.toString());
 
-    // CHECK: Does this user exist in the likes array?
-    const userLikeIndex = event.likes.findIndex(id => id.toString() === userId.toString());
+    let updatedEvent;
 
-    if (userLikeIndex > -1) {
-      // User ALREADY liked it -> REMOVE them (Unlike)
-      event.likes.splice(userLikeIndex, 1);
+    if (userLiked) {
+      // User already liked it -> REMOVE the like
+      updatedEvent = await Event.findByIdAndUpdate(
+        id,
+        { $pull: { likes: userId } },
+        { new: true }
+      );
     } else {
-      // User has NOT liked it -> ADD them (Like)
-      event.likes.push(userId);
+      // User hasn't liked it -> ADD the like
+      updatedEvent = await Event.findByIdAndUpdate(
+        id,
+        { $push: { likes: userId } },
+        { new: true }
+      );
     }
 
-    const updatedEvent = await event.save();
-    
     res.status(200).json({
-      message: userLikeIndex > -1 ? "Unliked successfully" : "Liked successfully",
-      likes: updatedEvent.likes,
-      likeCount: updatedEvent.likes.length
+      message: userLiked ? "Unliked successfully" : "Liked successfully",
+      event: updatedEvent,
+      likeCount: updatedEvent.likes.length,
+      isLiked: !userLiked
     });
   } catch (error) {
     console.error("Toggle Interest Error:", error);
-    res.status(500).json({ message: "Server Error" });
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
