@@ -40,3 +40,23 @@ exports.approveEvent = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// 5. Get Approved Events
+exports.getApprovedEvents = async (req, res) => {
+  try {
+    const events = await Event.find({ isApproved: true }).populate('organizer', 'name email');
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// 6. Unapprove Event
+exports.unapproveEvent = async (req, res) => {
+  try {
+    const event = await Event.findByIdAndUpdate(req.params.id, { isApproved: false }, { new: true });
+    res.json({ message: "Event Unapproved", event });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

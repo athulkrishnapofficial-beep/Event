@@ -14,6 +14,7 @@ const bookingSchema = new mongoose.Schema({
     paymentId: { type: String, required: true },
     orderId: { type: String, required: true },
     amount: { type: Number, required: true },
+    quantity: { type: Number, required: true, default: 1 },
     status: { type: String, default: 'Confirmed' },
 }, { timestamps: true });
 

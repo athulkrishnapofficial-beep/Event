@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-// Added XCircle for the expired icon
-import { Ticket, Calendar, MapPin, CheckCircle, XCircle, ArrowLeft, Loader } from 'lucide-react'; 
+import { Ticket, Calendar, MapPin, CheckCircle, XCircle, ArrowLeft, Loader, Users } from 'lucide-react'; // Added Users icon
 import QRCode from "react-qr-code";
 
 export default function MyBookings() {
@@ -18,7 +17,8 @@ export default function MyBookings() {
         return;
       }
       try {
-        const { data } = await axios.get('https://event-kqrm.onrender.com/api/bookings/my-bookings', {
+        //const { data } = await axios.get('https://event-kqrm.onrender.com/api/bookings/my-bookings', {
+        const { data } = await axios.get('http://localhost:5000/api/bookings/my-bookings', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setBookings(data);
@@ -63,22 +63,21 @@ export default function MyBookings() {
           </div>
         ) : (
           bookings.map((booking) => {
-            // --- DATE LOGIC START ---
+            // --- DATE LOGIC ---
             const eventDate = new Date(booking.event?.date);
             const today = new Date();
-            
-            // Set time to midnight (00:00:00) for both dates to compare strictly by calendar day
             today.setHours(0, 0, 0, 0);
             eventDate.setHours(0, 0, 0, 0);
-
-            // If event date is strictly less than today, it is expired
             const isExpired = eventDate < today;
-            // --- DATE LOGIC END ---
+            // ------------------
+
+            // Fallback to 1 if quantity is missing in DB
+            const ticketCount = booking.quantity || 1; 
 
             return (
               <div key={booking._id} className="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col sm:flex-row border border-gray-100 relative group">
                 
-                {/* Event Image - Grayscale if expired */}
+                {/* Event Image */}
                 <div className={`sm:w-1/3 h-48 sm:h-auto relative bg-gray-200 ${isExpired ? 'grayscale' : ''}`}>
                   <img 
                     src={booking.event?.coverImage}
@@ -94,7 +93,6 @@ export default function MyBookings() {
                         {booking.event?.title}
                       </h2>
                       
-                      {/* CONDITIONAL BADGE RENDERING */}
                       {isExpired ? (
                         <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-gray-200">
                           <XCircle className="w-3 h-3 mr-1" /> EXPIRED
@@ -115,7 +113,16 @@ export default function MyBookings() {
                         <MapPin className={`w-4 h-4 mr-2 ${isExpired ? 'text-gray-400' : 'text-red-500'}`} />
                         {booking.event?.location}
                       </div>
-                      <div className="flex items-center font-mono text-xs text-gray-400">
+
+                      {/* --- TICKET COUNT DISPLAY --- */}
+                      <div className="flex items-center">
+                        <Ticket className={`w-4 h-4 mr-2 ${isExpired ? 'text-gray-400' : 'text-red-500'}`} />
+                        <span className="font-semibold text-gray-700">
+                           {ticketCount} {ticketCount > 1 ? 'Tickets' : 'Ticket'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center font-mono text-xs text-gray-400 pt-2">
                           ID: {booking.paymentId?.slice(-10).toUpperCase()}
                       </div>
                     </div>
@@ -123,10 +130,14 @@ export default function MyBookings() {
 
                   <div className="mt-6 pt-6 border-t border-dashed border-gray-200 flex justify-between items-end">
                     
-                    {/* QR Code Section - Dimmed if expired */}
+                    {/* QR Code */}
                     <div className={`bg-white p-2 border border-gray-100 rounded-lg shadow-sm ${isExpired ? 'opacity-30 grayscale' : ''}`}>
                       <QRCode 
-                          value={booking._id}
+                          value={JSON.stringify({ 
+                              id: booking._id, 
+                              tickets: ticketCount, 
+                              status: isExpired ? 'Expired' : 'Valid' 
+                          })}
                           size={64}
                           fgColor="#000000"
                           bgColor="#ffffff"
@@ -135,12 +146,12 @@ export default function MyBookings() {
                     </div>
 
                     <div className="text-right">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Entry Pass</p>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total Paid</p>
                       <p className={`text-2xl font-black ${isExpired ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
                         ₹{booking.amount}
                       </p>
                       <p className="text-[10px] text-gray-400 mt-1">
-                        {isExpired ? 'Event Concluded' : 'Scan at venue'}
+                        {isExpired ? 'Event Concluded' : 'Scan for Entry'}
                       </p>
                     </div>
                   </div>

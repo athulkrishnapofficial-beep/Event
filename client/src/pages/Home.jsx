@@ -16,13 +16,20 @@ function HeroImageSkeleton() {
 // --- 2. EVENT CARD (Text shows instantly, Image loads gracefully) ---
 function EventCard({ event }) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  
+  // Check if event is expired
+  const eventDate = new Date(event.date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  eventDate.setHours(0, 0, 0, 0);
+  const isExpired = eventDate < today;
 
   return (
-    <div className="group relative flex flex-col h-full bg-white rounded-2xl md:rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 border border-gray-100 hover:-translate-y-2 overflow-hidden cursor-pointer active:scale-98">
+    <div className={`group relative flex flex-col h-full bg-white rounded-2xl md:rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 border border-gray-100 hover:-translate-y-2 overflow-hidden cursor-pointer active:scale-98 ${isExpired ? 'opacity-60' : ''}`}>
       <Link to={`/event/${event._id}`} className="flex flex-col h-full">
         
         {/* IMAGE CONTAINER */}
-        <div className="relative w-full aspect-4/5 overflow-hidden bg-gray-100">
+        <div className={`relative w-full aspect-4/5 overflow-hidden bg-gray-100 ${isExpired ? 'grayscale' : ''}`}>
           
           {/* Skeleton Overlay: Visible until imageLoaded is true */}
           {!imageLoaded && (
@@ -43,8 +50,8 @@ function EventCard({ event }) {
           
           {/* Tag */}
           <div className="absolute top-2 left-2 md:top-4 md:left-4 z-20">
-            <div className="bg-white/90 backdrop-blur-sm px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-wider text-gray-900 shadow-lg">
-              {event.category || "Event"}
+            <div className={`${isExpired ? 'bg-gray-400/90 text-gray-100' : 'bg-white/90 text-gray-900'} backdrop-blur-sm px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-wider shadow-lg`}>
+              {isExpired ? 'Expired' : (event.category || "Event")}
             </div>
           </div>
           
@@ -55,7 +62,7 @@ function EventCard({ event }) {
         {/* CONTENT (Visible Immediately) */}
         <div className="p-3 md:p-5 flex-1 flex flex-col">
           <div className="flex-1 space-y-1 md:space-y-2">
-            <h3 className="font-bold text-gray-900 text-sm md:text-lg leading-tight line-clamp-2 group-hover:text-rose-600 transition-colors duration-300">
+            <h3 className={`font-bold text-sm md:text-lg leading-tight line-clamp-2 group-hover:text-rose-600 transition-colors duration-300 ${isExpired ? 'text-gray-500' : 'text-gray-900'}`}>
               {event.title}
             </h3>
             <p className="text-gray-500 text-[10px] md:text-xs font-medium line-clamp-2 leading-relaxed">
@@ -65,8 +72,10 @@ function EventCard({ event }) {
             
           <div className="mt-3 md:mt-4 pt-2 md:pt-4 border-t border-gray-50">
             <div>
-              <p className="text-gray-400 text-[8px] md:text-[10px] font-bold uppercase tracking-wider">Starting</p>
-              <p className="text-gray-900 font-black text-base md:text-xl tracking-tight">
+              <p className="text-gray-400 text-[8px] md:text-[10px] font-bold uppercase tracking-wider">
+                {isExpired ? 'Event Ended' : 'Starting'}
+              </p>
+              <p className={`font-black text-base md:text-xl tracking-tight ${isExpired ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
                 ₹{event.price}
               </p>
             </div>
@@ -137,7 +146,8 @@ export default function Home() {
   useEffect(() => {
     const fetchApprovedEvents = async () => {
       try {
-        const { data } = await axios.get('https://event-kqrm.onrender.com/api/events');
+        //const { data } = await axios.get('https://event-kqrm.onrender.com/api/events');
+        const { data } = await axios.get('http://localhost:5000/api/events');
         const approved = data.filter(event => event.isApproved === true);
         setEvents(approved);
         setFilteredEvents(approved);

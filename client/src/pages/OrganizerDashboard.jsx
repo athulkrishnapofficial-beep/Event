@@ -18,8 +18,8 @@ export default function OrganizerDashboard() {
     }
 
     try {
-      const { data } = await axios.get('https://event-kqrm.onrender.com/api/events/my-events', {
-      //const { data } = await axios.get('http://localhost:5000/api/events/my-events', {
+      //const { data } = await axios.get('https://event-kqrm.onrender.com/api/events/my-events', {
+      const { data } = await axios.get('http://localhost:5000/api/events/my-events', {
         headers: { Authorization: `Bearer ${token}` } // Include Authorization header
       });
       setMyEvents(data); // Save events to state

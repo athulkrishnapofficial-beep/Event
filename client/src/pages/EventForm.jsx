@@ -14,8 +14,8 @@ const handleSubmit = async (e) => {
   try {
     // Send POST request to backend to create event
 
-    await axios.post('https://event-kqrm.onrender.com/api/events', data, {
-    //await axios.post('http://localhost:5000/api/events', data, {
+    //await axios.post('https://event-kqrm.onrender.com/api/events', data, {
+    await axios.post('http://localhost:5000/api/events', data, {
 
       headers: { 
         Authorization: `Bearer ${token}`, // Pass token in Authorization header for protected route

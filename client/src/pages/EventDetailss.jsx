@@ -3,11 +3,11 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { 
   ArrowLeft, Calendar, MapPin, Ticket, ShieldCheck, 
-  Heart, Clock, Info // Removed CheckCircle as it wasn't used in valid context
+  Heart, Clock, Info, CheckCircle, Minus, Plus // Added Minus/Plus icons
 } from 'lucide-react';
 import { Link } from "react-router-dom";
 
-// Function to decode JWT and extract userId
+// Function to decode JWT (Helper)
 const extractUserIdFromToken = (token) => {
   try {
     const base64Url = token.split('.')[1];
@@ -16,7 +16,7 @@ const extractUserIdFromToken = (token) => {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
     const decoded = JSON.parse(jsonPayload);
-    return decoded.id; // JWT contains 'id' field from backend
+    return decoded.id; 
   } catch (error) {
     console.error('Error decoding token:', error);
     return null;
@@ -30,50 +30,37 @@ export default function EventDetails() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // --- STATE FOR INTEREST FUNCTIONALITY ---
+  // Interest State
   const [isInterested, setIsInterested] = useState(false);
   const [interestCount, setInterestCount] = useState(0);
+
+  // --- NEW STATE: TICKET COUNT ---
+  const [ticketCount, setTicketCount] = useState(1);
 
   // Fetch Event Data & Verify Interest
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const baseUrl = 'https://event-1-ie8k.onrender.com';
-        // const baseUrl = 'http://localhost:5000'; // Toggle for local testing
+        //const baseUrl = 'https://event-1-ie8k.onrender.com';
+        const baseUrl = 'http://localhost:5000';
+
         
         const { data } = await axios.get(`${baseUrl}/api/events/single/${id}`);
         setEvent(data);
         
-        // 1. Initialize Interest Count
         const count = data.likes ? data.likes.length : 0;
         setInterestCount(count);
 
-        // 2. Get user info from token
         const token = localStorage.getItem('token');
         let userId = localStorage.getItem('userId');
         
-        // If userId not in localStorage, extract from token
         if (token && !userId) {
           userId = extractUserIdFromToken(token);
-          // Store it for future use
-          if (userId) {
-            localStorage.setItem('userId', userId);
-          }
+          if (userId) localStorage.setItem('userId', userId);
         }
         
-        console.log('Debug - userId from localStorage or token:', userId);
-        console.log('Debug - likes from backend:', data.likes);
-        
-        // Verify if current user has already liked this event
         if (token && userId && data.likes && Array.isArray(data.likes)) {
-          const isUserLiked = data.likes.some(likeId => {
-            // Simple string comparison since both should be strings now
-            const likeIdString = String(likeId);
-            const userIdString = String(userId);
-            return likeIdString === userIdString;
-          });
-          
-          console.log('Debug - isUserLiked result:', isUserLiked);
+          const isUserLiked = data.likes.some(likeId => String(likeId) === String(userId));
           setIsInterested(isUserLiked);
         } else {
           setIsInterested(false);
@@ -88,17 +75,28 @@ export default function EventDetails() {
     fetchEvent();
   }, [id]);
 
+  // --- TICKET COUNTER HANDLERS ---
+  const incrementTickets = () => {
+    if (event && ticketCount < event.availableTickets) {
+      setTicketCount(prev => prev + 1);
+    }
+  };
+
+  const decrementTickets = () => {
+    if (ticketCount > 1) {
+      setTicketCount(prev => prev - 1);
+    }
+  };
+
   // --- HANDLER: MARK AS INTERESTED ---
   const handleInterest = async () => {
     const token = localStorage.getItem('token');
     
-    // 1. Auth Check
     if (!token) {
       navigate('/login', { state: { from: location.pathname } });
       return;
     }
 
-    // 2. Optimistic UI Update (Update screen instantly before API finishes)
     const previousState = isInterested;
     const previousCount = interestCount;
 
@@ -106,27 +104,20 @@ export default function EventDetails() {
     setInterestCount(prev => previousState ? prev - 1 : prev + 1);
 
     try {
-      const baseUrl = 'https://event-1-ie8k.onrender.com';
-      // const baseUrl = 'http://localhost:5000';
+      //const baseUrl = 'https://event-1-ie8k.onrender.com';
+      const baseUrl = 'http://localhost:5000';
 
-      // 3. API Call
       const { data } = await axios.put(
         `${baseUrl}/api/events/interest/${event._id}`,
         {}, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // 4. Update state with actual API response to be safe
-      if (data.isLiked !== undefined) {
-        setIsInterested(data.isLiked);
-      }
-      if (data.likeCount !== undefined) {
-        setInterestCount(data.likeCount);
-      }
+      if (data.isLiked !== undefined) setIsInterested(data.isLiked);
+      if (data.likeCount !== undefined) setInterestCount(data.likeCount);
       
     } catch (error) {
       console.error("Failed to update interest:", error);
-      // Revert UI if API fails
       setIsInterested(previousState);
       setInterestCount(previousCount);
       alert("Something went wrong. Please try again.");
@@ -142,12 +133,19 @@ export default function EventDetails() {
     }
 
     try {
-      const baseUrl = 'https://event-1-ie8k.onrender.com';
-      // const baseUrl = 'http://localhost:5000';
+      //const baseUrl = 'https://event-1-ie8k.onrender.com';
+      const baseUrl = 'http://localhost:5000';
       
+      // Calculate Total Amount
+      const totalAmount = event.price * ticketCount;
+
       const orderResponse = await axios.post(
         `${baseUrl}/api/payments/order`,
-        { amount: event.price, eventId: event._id },
+        { 
+          amount: totalAmount, // Send total calculated price
+          eventId: event._id,
+          quantity: ticketCount // Send quantity so backend knows how many to deduct
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const order = orderResponse.data;
@@ -157,7 +155,7 @@ export default function EventDetails() {
         amount: order.amount,
         currency: order.currency,
         name: "EventEase",
-        description: `Booking for ${event.title}`,
+        description: `Booking ${ticketCount} ticket(s) for ${event.title}`,
         order_id: order.id,
         handler: async (response) => {
           try {
@@ -166,7 +164,8 @@ export default function EventDetails() {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               eventId: event._id,
-              amount: event.price
+              amount: totalAmount,
+              quantity: ticketCount // Pass quantity to verify/booking endpoint as well
             };
             const verifyResponse = await axios.post(
               `${baseUrl}/api/payments/verify`,
@@ -194,7 +193,7 @@ export default function EventDetails() {
     }
   };
 
-  // Modern Loading State
+  // Loading & Error States
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="flex flex-col items-center space-y-4">
@@ -207,7 +206,6 @@ export default function EventDetails() {
     </div>
   );
 
-  // Modern Not Found State
   if (!event) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4 text-center">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full">
@@ -227,7 +225,7 @@ export default function EventDetails() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-12">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-24 lg:pb-12">
       
       {/* Navigation Bar */}
       <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100">
@@ -262,14 +260,12 @@ export default function EventDetails() {
           <div className="lg:col-span-8 space-y-8">
             
             {/* Hero Image Section */}
-            <div className="relative rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-21/9 bg-gray-200 group">
+            <div className="relative rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[21/9] bg-gray-200 group">
               <img 
                 src={event.coverImage} 
                 alt={event.title} 
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out"
               />
-              
-              {/* Interest Badge */}
               <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-gray-900 px-3 py-1.5 rounded-full text-sm font-bold shadow-sm flex items-center gap-1.5">
                 <Heart className={`w-4 h-4 ${isInterested ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
                 {interestCount} Interested
@@ -309,7 +305,7 @@ export default function EventDetails() {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Location</p>
-                    <p className="text-gray-900 font-semibold mt-0.5 truncate max-w-37.5">
+                    <p className="text-gray-900 font-semibold mt-0.5 truncate max-w-[150px]">
                       {event.location}
                     </p>
                   </div>
@@ -344,19 +340,54 @@ export default function EventDetails() {
           <div className="lg:col-span-4">
             <div className="sticky top-24 space-y-6">
               
-              <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+              {/* DESKTOP PRICING CARD */}
+              <div className="hidden lg:block bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
                 <div className="bg-gray-900 p-6 text-white text-center relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-gray-800 to-black opacity-50"></div>
                   <div className="relative z-10">
                     <p className="text-sm text-gray-300 font-medium uppercase tracking-widest mb-1">Total Price</p>
                     <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-4xl font-black">₹{event.price}</span>
-                      <span className="text-gray-400 text-sm font-normal">/ person</span>
+                      {/* DYNAMIC TOTAL PRICE */}
+                      <span className="text-4xl font-black">₹{event.price * ticketCount}</span>
                     </div>
+                    {/* Shows unit price calculation */}
+                    <p className="text-xs text-gray-400 mt-1">
+                       (₹{event.price} × {ticketCount} tickets)
+                    </p>
                   </div>
                 </div>
 
                 <div className="p-6 sm:p-8">
+                  
+                  {/* --- NUMBER OF TICKETS SELECTOR --- */}
+                  <div className="mb-8">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-3">
+                        Number of Tickets
+                    </label>
+                    <div className="flex items-center justify-between bg-gray-50 rounded-xl p-2 border border-gray-200">
+                        <button 
+                            onClick={decrementTickets}
+                            disabled={ticketCount <= 1}
+                            className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <Minus className="w-4 h-4" />
+                        </button>
+                        
+                        <span className="text-xl font-bold text-gray-900 w-12 text-center">
+                            {ticketCount}
+                        </span>
+
+                        <button 
+                            onClick={incrementTickets}
+                            disabled={ticketCount >= event.availableTickets}
+                            className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </button>
+                    </div>
+                  </div>
+                  {/* --------------------------------- */}
+
                   <div className="space-y-4 mb-8">
                     <div className="flex items-center gap-3 text-sm text-gray-600">
                       <ShieldCheck className="w-5 h-5 text-green-500 shrink-0" />
@@ -376,7 +407,7 @@ export default function EventDetails() {
                         ? 'bg-red-600 text-white hover:bg-red-700 hover:shadow-red-500/30' 
                         : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                   >
-                    {event.availableTickets > 0 ? 'Book Ticket Now' : 'Sold Out'}
+                    {event.availableTickets > 0 ? `Book ${ticketCount} Ticket${ticketCount > 1 ? 's' : ''}` : 'Sold Out'}
                   </button>
 
                   <p className="text-xs text-center text-gray-400 mt-4">
@@ -399,32 +430,32 @@ export default function EventDetails() {
                 </Link>
               </div>
 
-              {/* INTERESTED BUTTON SECTION */}
+              {/* INTERESTED BUTTON */}
               <div className="bg-pink-50 rounded-2xl p-5 border border-pink-100 shadow-sm">
-                 <div className="flex items-center justify-between mb-3">
-                     <div>
+                  <div className="flex items-center justify-between mb-3">
+                      <div>
                         <p className="font-bold text-gray-900 text-sm">Interested?</p>
                         <p className="text-xs text-gray-500 mt-1">Save it for later</p>
-                     </div>
-                     <Heart className={`w-6 h-6 ${isInterested ? "fill-pink-500 text-pink-500" : "text-gray-400"}`} />
-                 </div>
-                 
-                 <button
-                    onClick={handleInterest}
-                    className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 border
-                      ${isInterested 
-                        ? 'bg-pink-600 text-white border-pink-600 hover:bg-pink-700 shadow-md shadow-pink-200' 
-                        : 'bg-white text-gray-700 border-gray-200 hover:border-pink-300 hover:text-pink-600'
-                      }`}
-                 >
-                    {isInterested ? (
-                        <span className="flex items-center justify-center gap-2">
-                             <Heart className="w-4 h-4 fill-white" /> Already Liked
-                        </span>
-                    ) : (
-                        "Mark as Interested"
-                    )}
-                 </button>
+                      </div>
+                      <Heart className={`w-6 h-6 ${isInterested ? "fill-pink-500 text-pink-500" : "text-gray-400"}`} />
+                  </div>
+                  
+                  <button
+                      onClick={handleInterest}
+                      className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 border
+                        ${isInterested 
+                          ? 'bg-pink-600 text-white border-pink-600 hover:bg-pink-700 shadow-md shadow-pink-200' 
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-pink-300 hover:text-pink-600'
+                        }`}
+                  >
+                      {isInterested ? (
+                          <span className="flex items-center justify-center gap-2">
+                              <CheckCircle className="w-4 h-4" /> Already Liked
+                          </span>
+                      ) : (
+                          "Mark as Interested"
+                      )}
+                  </button>
               </div>
 
             </div>
@@ -432,6 +463,40 @@ export default function EventDetails() {
 
         </div>
       </main>
+
+      {/* --- MOBILE STICKY FOOTER --- */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50 lg:hidden shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        
+        {/* Mobile Ticket Selector Row */}
+        <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-100">
+           <span className="text-xs font-bold text-gray-500 uppercase">Tickets:</span>
+           <div className="flex items-center gap-3">
+              <button onClick={decrementTickets} disabled={ticketCount <= 1} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-lg text-gray-600 disabled:opacity-50"><Minus className="w-3 h-3"/></button>
+              <span className="font-bold text-gray-900">{ticketCount}</span>
+              <button onClick={incrementTickets} disabled={ticketCount >= event.availableTickets} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-lg text-gray-600 disabled:opacity-50"><Plus className="w-3 h-3"/></button>
+           </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-500 font-bold uppercase tracking-wide">Total</span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-black text-gray-900">₹{event.price * ticketCount}</span>
+            </div>
+          </div>
+          <button 
+            onClick={handlePayment}
+            disabled={event.availableTickets <= 0}
+            className={`flex-1 px-4 py-3 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 
+              ${event.availableTickets > 0 
+                ? 'bg-red-600 hover:bg-red-700' 
+                : 'bg-gray-400 cursor-not-allowed'}`}
+          >
+            {event.availableTickets > 0 ? 'Book Now' : 'Sold Out'}
+          </button>
+        </div>
+      </div>
+
     </div>
   );
 }

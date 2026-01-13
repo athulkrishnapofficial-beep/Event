@@ -20,8 +20,8 @@ export default function Profile() {
           return;
         }
 
-        //const { data } = await axios.get('http://localhost:5000/api/users/profile', {
-        const { data } = await axios.get('https://event-kqrm.onrender.com/api/users/profile', {
+        const { data } = await axios.get('http://localhost:5000/api/users/profile', {
+        //const { data } = await axios.get('https://event-kqrm.onrender.com/api/users/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
         

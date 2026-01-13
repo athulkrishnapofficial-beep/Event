@@ -18,8 +18,8 @@ export default function Signup() {
     setIsLoading(true); // Start loading animation
 
     try {
-      await axios.post('https://event-kqrm.onrender.com/api/users/signup', formData); // Send signup data to backend
-      //await axios.post('http://localhost:5000/api/users/signup', formData);
+      //await axios.post('https://event-kqrm.onrender.com/api/users/signup', formData); // Send signup data to backend
+      await axios.post('http://localhost:5000/api/users/signup', formData);
       
       alert("Registration Successful!"); // Notify success
       navigate('/login'); // Redirect to login page

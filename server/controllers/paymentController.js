@@ -24,7 +24,7 @@ exports.createOrder = async (req, res) => {
 
 exports.verifyPayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, eventId, amount } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, eventId, amount, quantity } = req.body;
     const sign = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSign = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -37,10 +37,11 @@ exports.verifyPayment = async (req, res) => {
         event: eventId,
         paymentId: razorpay_payment_id,
         orderId: razorpay_order_id,
-        amount: amount
+        amount: amount,
+        quantity: quantity || 1
       });
       await newBooking.save();
-      await Event.findByIdAndUpdate(eventId, { $inc: { availableTickets: -1 } });
+      await Event.findByIdAndUpdate(eventId, { $inc: { availableTickets: -(quantity || 1) } });
 
       return res.status(200).json({ success: true, message: "Payment verified successfully" });
     } else {
