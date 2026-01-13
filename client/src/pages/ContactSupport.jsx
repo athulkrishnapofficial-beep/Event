@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   ArrowLeft, Mail, Phone, MapPin, Send, 
-  MessageSquare, HelpCircle, CheckCircle 
+  MessageSquare, HelpCircle, CheckCircle, Loader
 } from 'lucide-react';
 import API_URL from '../config/api';
 
@@ -19,10 +19,47 @@ export default function ContactSupport() {
   });
   
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
+  const [loading, setLoading] = useState(true);
 
-  // Handle Input Change
+  // Fetch user data on component mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+
+        const { data } = await axios.get(`${API_URL}/api/users/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        setFormData(prevData => ({
+          ...prevData,
+          name: data.name || '',
+          email: data.email || ''
+        }));
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        if (error.response?.status === 401) {
+          navigate('/login');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
+
+  // Handle Input Change (only for subject and message)
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    // Only allow changes to subject and message, not name and email
+    if (name === 'subject' || name === 'message') {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   // Handle Submit
@@ -137,7 +174,12 @@ const handleSubmit = async (e) => {
           <div className="md:col-span-2">
             <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
               
-              {status === 'success' ? (
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Loader className="w-8 h-8 text-red-600 animate-spin mb-4" />
+                  <p className="text-gray-600 font-medium">Loading your information...</p>
+                </div>
+              ) : status === 'success' ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center animate-fadeIn">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                     <CheckCircle className="w-8 h-8 text-green-600" />
@@ -157,27 +199,27 @@ const handleSubmit = async (e) => {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Your Name <span className="text-gray-400 text-xs">(Auto-filled)</span></label>
                         <input
                           type="text"
                           name="name"
                           required
                           value={formData.name}
-                          onChange={handleChange}
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition bg-gray-50 focus:bg-white"
-                          placeholder="John Doe"
+                          readOnly
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-700 cursor-not-allowed focus:ring-0 transition"
+                          placeholder="Loading..."
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Email Address <span className="text-gray-400 text-xs">(Auto-filled)</span></label>
                         <input
                           type="email"
                           name="email"
                           required
                           value={formData.email}
-                          onChange={handleChange}
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition bg-gray-50 focus:bg-white"
-                          placeholder="john@example.com"
+                          readOnly
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-700 cursor-not-allowed focus:ring-0 transition"
+                          placeholder="Loading..."
                         />
                       </div>
                     </div>
