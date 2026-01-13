@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { 
   ArrowLeft, Calendar, MapPin, Ticket, ShieldCheck, 
-  Heart, Clock, Info, CheckCircle // Changed Star to Heart
+  Heart, Clock, Info // Removed CheckCircle as it wasn't used in valid context
 } from 'lucide-react';
 import { Link } from "react-router-dom";
 
@@ -14,35 +14,40 @@ export default function EventDetails() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // --- NEW STATE FOR INTEREST FUNCTIONALITY ---
+  // --- STATE FOR INTEREST FUNCTIONALITY ---
   const [isInterested, setIsInterested] = useState(false);
   const [interestCount, setInterestCount] = useState(0);
 
-  // Fetch Event Data
+  // Fetch Event Data & Verify Interest
   useEffect(() => {
     const fetchEvent = async () => {
       try {
         const baseUrl = 'https://event-1-ie8k.onrender.com';
-        //const baseUrl = 'http://localhost:5000'; // Toggle for local testing
+        // const baseUrl = 'http://localhost:5000'; // Toggle for local testing
         
         const { data } = await axios.get(`${baseUrl}/api/events/single/${id}`);
         setEvent(data);
         
-        // Initialize Interest Data
+        // 1. Initialize Interest Count
         const count = data.likes ? data.likes.length : 0;
         setInterestCount(count);
 
-        // Check if current user is interested
+        // 2. Strict User Verification Logic
         const token = localStorage.getItem('token');
         const userId = localStorage.getItem('userId');
         
         // Verify if current user has already liked this event
         if (token && userId && data.likes && Array.isArray(data.likes)) {
-          const isUserLiked = data.likes.some(likeId => {
-            // Compare the like ID (can be string or object) with user ID
-            const likeIdStr = typeof likeId === 'object' ? likeId._id || likeId.toString() : likeId;
-            return likeIdStr === userId || likeIdStr.toString() === userId;
+          const isUserLiked = data.likes.some(likeItem => {
+            // Handle if 'likeItem' is just an ID string OR a populated User object
+            const idToCheck = (typeof likeItem === 'object' && likeItem !== null) 
+                               ? likeItem._id 
+                               : likeItem;
+            
+            // Convert both to String to ensure strict comparison matches
+            return String(idToCheck) === String(userId);
           });
+          
           setIsInterested(isUserLiked);
         } else {
           setIsInterested(false);
@@ -76,7 +81,7 @@ export default function EventDetails() {
 
     try {
       const baseUrl = 'https://event-1-ie8k.onrender.com';
-      //const baseUrl = 'http://localhost:5000';
+      // const baseUrl = 'http://localhost:5000';
 
       // 3. API Call
       const { data } = await axios.put(
@@ -85,7 +90,7 @@ export default function EventDetails() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // 4. Update state with API response
+      // 4. Update state with actual API response to be safe
       if (data.isLiked !== undefined) {
         setIsInterested(data.isLiked);
       }
@@ -102,7 +107,7 @@ export default function EventDetails() {
     }
   };
 
-  // --- HANDLER: PAYMENT (UNCHANGED) ---
+  // --- HANDLER: PAYMENT ---
   const handlePayment = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -112,7 +117,7 @@ export default function EventDetails() {
 
     try {
       const baseUrl = 'https://event-1-ie8k.onrender.com';
-      //const baseUrl = 'http://localhost:5000';
+      // const baseUrl = 'http://localhost:5000';
       
       const orderResponse = await axios.post(
         `${baseUrl}/api/payments/order`,
@@ -238,7 +243,7 @@ export default function EventDetails() {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out"
               />
               
-              {/* --- CHANGED: Interested Badge instead of Rating --- */}
+              {/* Interest Badge */}
               <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-gray-900 px-3 py-1.5 rounded-full text-sm font-bold shadow-sm flex items-center gap-1.5">
                 <Heart className={`w-4 h-4 ${isInterested ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
                 {interestCount} Interested
@@ -368,7 +373,7 @@ export default function EventDetails() {
                 </Link>
               </div>
 
-              {/* --- NEW: INTERESTED BUTTON SECTION --- */}
+              {/* INTERESTED BUTTON SECTION */}
               <div className="bg-pink-50 rounded-2xl p-5 border border-pink-100 shadow-sm">
                  <div className="flex items-center justify-between mb-3">
                      <div>
