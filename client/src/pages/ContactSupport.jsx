@@ -30,10 +30,9 @@ const handleSubmit = async (e) => {
   setStatus('sending');
 
   try {
-    const baseUrl = 'https://event-kqrm.onrender.com';
-    // const baseUrl = 'http://localhost:5000';
-
-    // --- FIX: UNCOMMENT THIS LINE ---
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://event-kqrm.onrender.com' 
+      : 'http://localhost:5000';
     await axios.post(`${baseUrl}/api/support`, formData);
     
     setStatus('success');
