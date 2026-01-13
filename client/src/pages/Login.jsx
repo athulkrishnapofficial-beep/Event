@@ -24,8 +24,7 @@ export default function Login() {
 
       // Save token and role to localStorage for session persistence
       localStorage.setItem('token', data.token);
-      localStorage.setItem('role', data.role);
-
+      localStorage.setItem('role', data.role);      localStorage.setItem('userId', data.userId); // Store userId
       // Redirect user based on role after successful login
       if (data.role === 'admin') {
         navigate('/admin-panel'); // Admin goes to admin panel

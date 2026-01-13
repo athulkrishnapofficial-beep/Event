@@ -44,7 +44,12 @@ exports.loginUser = async (req, res) => {
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
       );
-      res.json({ token, role: user.role, name: user.name });
+      res.json({ 
+        token, 
+        role: user.role, 
+        name: user.name,
+        userId: user._id.toString() // Add userId to response
+      });
     } else {
       res.status(401).json({ message: "Invalid email or password" });
     }
