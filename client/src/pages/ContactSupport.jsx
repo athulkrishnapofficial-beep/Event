@@ -30,10 +30,8 @@ export default function ContactSupport() {
     setStatus('sending');
 
     try {
-       //await axios.post('http://localhost:5000/api/support', formData);
+      await axios.post('http://localhost:5000/api/messages/submit', formData);
       
-           await new Promise(resolve => setTimeout(resolve, 1500)); 
-
       setStatus('success');
       setFormData({ name: '', email: '', subject: '', message: '' }); // Reset form
     } catch (error) {

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Users, Briefcase, CheckCircle, LogOut, X } from 'lucide-react';
+import { Users, Briefcase, CheckCircle, LogOut, X, MessageSquare, Trash2 } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState('pending'); // pending, approved, users, organizers
+  const [activeTab, setActiveTab] = useState('pending'); // pending, approved, users, organizers, messages
   const [data, setData] = useState([]);
   const navigate = useNavigate();
 
@@ -19,6 +19,7 @@ export default function AdminDashboard() {
       if (activeTab === 'organizers') endpoint = '/api/admin/organizers';
       if (activeTab === 'pending') endpoint = '/api/admin/events/pending';
       if (activeTab === 'approved') endpoint = '/api/admin/events/approved';
+      if (activeTab === 'messages') endpoint = '/api/messages/all';
 
       //const res = await axios.get(`http://localhost:5000${endpoint}`, {
       const res = await axios.get(`https://event-kqrm.onrender.com${endpoint}`, {
@@ -62,6 +63,21 @@ export default function AdminDashboard() {
         fetchData(); // Refresh list
       } catch (err) {
         alert("Error unapproving event");
+      }
+    }
+  };
+
+  const deleteMessage = async (id) => {
+    if (window.confirm("Are you sure you want to delete this message?")) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`https://event-kqrm.onrender.com/api/messages/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        alert("Message deleted!");
+        fetchData(); // Refresh list
+      } catch (err) {
+        alert("Error deleting message");
       }
     }
   };
@@ -112,6 +128,16 @@ export default function AdminDashboard() {
           >
             <Briefcase className="w-5 h-5" /> <span>Organizers</span>
           </button>
+          <button
+            onClick={() => setActiveTab('messages')}
+            className={`flex items-center space-x-3 w-full p-3 rounded-lg ${
+              activeTab === 'messages'
+                ? 'bg-red-50 text-red-600 font-semibold'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            <MessageSquare className="w-5 h-5" /> <span>Messages</span>
+          </button>
         </nav>
 
         <button
@@ -133,18 +159,18 @@ export default function AdminDashboard() {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="p-4 font-semibold text-gray-600">
-                  {activeTab === 'pending' || activeTab === 'approved' ? 'Event Title' : 'Name'}
+                  {activeTab === 'pending' || activeTab === 'approved' ? 'Event Title' : activeTab === 'messages' ? 'Sender Name' : 'Name'}
                 </th>
                 <th className="p-4 font-semibold text-gray-600">
                   {activeTab === 'pending' || activeTab === 'approved' ? 'Price / Tickets' : 'Email'}
                 </th>
                 <th className="p-4 font-semibold text-gray-600">
-                  {activeTab === 'pending' || activeTab === 'approved' ? 'Location' : 'Status'}
+                  {activeTab === 'pending' || activeTab === 'approved' ? 'Location' : activeTab === 'messages' ? 'Subject' : 'Status'}
                 </th>
                 <th className="p-4 font-semibold text-gray-600">
-                  {activeTab === 'pending' || activeTab === 'approved' ? 'Date' : ''}
+                  {activeTab === 'pending' || activeTab === 'approved' ? 'Date' : activeTab === 'messages' ? 'Date' : ''}
                 </th>
-                {(activeTab === 'pending' || activeTab === 'approved') && (
+                {(activeTab === 'pending' || activeTab === 'approved' || activeTab === 'messages') && (
                   <th className="p-4 font-semibold text-gray-600 text-right">Action</th>
                 )}
               </tr>
@@ -152,7 +178,30 @@ export default function AdminDashboard() {
             <tbody className="divide-y divide-gray-100">
               {data.map((item) => (
                 <tr key={item._id} className="hover:bg-gray-50">
-                  {activeTab === 'pending' || activeTab === 'approved' ? (
+                  {activeTab === 'messages' ? (
+                    <>
+                      <td className="p-4 font-medium text-gray-900">
+                        {item.name}
+                      </td>
+                      <td className="p-4 text-gray-600">
+                        {item.email}
+                      </td>
+                      <td className="p-4 text-gray-600">
+                        {item.subject}
+                      </td>
+                      <td className="p-4 text-gray-600">
+                        {new Date(item.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="p-4 text-right">
+                        <button
+                          onClick={() => deleteMessage(item._id)}
+                          className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-700 shadow-sm flex items-center gap-2 ml-auto"
+                        >
+                          <Trash2 className="w-4 h-4" /> Delete
+                        </button>
+                      </td>
+                    </>
+                  ) : activeTab === 'pending' || activeTab === 'approved' ? (
                     <>
                       <td className="p-4 font-medium text-gray-900">
                         {item.title}

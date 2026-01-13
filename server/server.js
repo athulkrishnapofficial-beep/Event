@@ -10,6 +10,7 @@ const authRoutes = require("./routes/userRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const paymentRoutes = require("./routes/paymentRoutes"); // Import payment routes
 const bookingRoutes = require("./routes/bookingRoutes"); // Import booking routes
+const messageRoutes = require("./routes/messageRoutes"); // Import message routes
 
 // 2. Initialize App (CRITICAL: This must be before app.use)
 const app = express();
@@ -28,6 +29,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/payments", paymentRoutes); // Now 'app' exists, so this works
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/messages", messageRoutes);
 app.use('/api/admin', require('./routes/adminRoutes'));
 
 // 5. Connect to DB and Start Server
