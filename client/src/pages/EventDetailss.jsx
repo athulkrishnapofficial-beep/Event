@@ -32,22 +32,39 @@ export default function EventDetails() {
         const count = data.likes ? data.likes.length : 0;
         setInterestCount(count);
 
-        // 2. Strict User Verification Logic
+        // 2. Get user info
         const token = localStorage.getItem('token');
         const userId = localStorage.getItem('userId');
+        
+        console.log('Debug - userId from localStorage:', userId);
+        console.log('Debug - likes from backend:', data.likes);
         
         // Verify if current user has already liked this event
         if (token && userId && data.likes && Array.isArray(data.likes)) {
           const isUserLiked = data.likes.some(likeItem => {
-            // Handle if 'likeItem' is just an ID string OR a populated User object
-            const idToCheck = (typeof likeItem === 'object' && likeItem !== null) 
-                               ? likeItem._id 
-                               : likeItem;
+            // Handle if 'likeItem' is just an ID string OR an ObjectId
+            let likeIdString = '';
             
-            // Convert both to String to ensure strict comparison matches
-            return String(idToCheck) === String(userId);
+            if (typeof likeItem === 'object' && likeItem !== null && likeItem._id) {
+              // If it's an object with _id property
+              likeIdString = String(likeItem._id);
+            } else if (typeof likeItem === 'string') {
+              // If it's already a string
+              likeIdString = likeItem;
+            } else if (likeItem && likeItem.toString) {
+              // If it has a toString method (ObjectId)
+              likeIdString = likeItem.toString();
+            }
+            
+            const userIdString = String(userId);
+            const matches = likeIdString === userIdString;
+            
+            console.log('Debug - Comparing:', { likeIdString, userIdString, matches });
+            
+            return matches;
           });
           
+          console.log('Debug - isUserLiked result:', isUserLiked);
           setIsInterested(isUserLiked);
         } else {
           setIsInterested(false);
