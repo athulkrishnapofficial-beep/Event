@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import API_URL from '../config/api';
 
 // Component Definition
 export default function CreateEvent() {
@@ -43,8 +44,7 @@ export default function CreateEvent() {
     try {
       const token = localStorage.getItem('token'); // Fetch token from localStorage
       // Send POST request to backend API with headers (authorization + multipart)
-      //await axios.post('http://localhost:5000/api/events', data, {
-      await axios.post('https://event-kqrm.onrender.com/api/events', data, {
+      await axios.post(`${API_URL}/api/events`, data, {
         headers: { 
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`

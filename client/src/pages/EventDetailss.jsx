@@ -6,6 +6,7 @@ import {
   Heart, Clock, Info, CheckCircle, Minus, Plus // Added Minus/Plus icons
 } from 'lucide-react';
 import { Link } from "react-router-dom";
+import API_URL from '../config/api';
 
 // Function to decode JWT (Helper)
 const extractUserIdFromToken = (token) => {
@@ -41,11 +42,7 @@ export default function EventDetails() {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const baseUrl = 'https://event-1-ie8k.onrender.com';
-        //const baseUrl = 'http://localhost:5000';
-
-        
-        const { data } = await axios.get(`${baseUrl}/api/events/single/${id}`);
+        const { data } = await axios.get(`${API_URL}/api/events/single/${id}`);
         setEvent(data);
         
         const count = data.likes ? data.likes.length : 0;

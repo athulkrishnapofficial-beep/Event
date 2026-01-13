@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Ticket, Calendar, MapPin, CheckCircle, XCircle, ArrowLeft, Loader, Users } from 'lucide-react'; // Added Users icon
 import QRCode from "react-qr-code";
+import API_URL from '../config/api';
 
 export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
@@ -17,8 +18,7 @@ export default function MyBookings() {
         return;
       }
       try {
-        const { data } = await axios.get('https://event-kqrm.onrender.com/api/bookings/my-bookings', {
-        //const { data } = await axios.get('http://localhost:5000/api/bookings/my-bookings', {
+        const { data } = await axios.get(`${API_URL}/api/bookings/my-bookings`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setBookings(data);

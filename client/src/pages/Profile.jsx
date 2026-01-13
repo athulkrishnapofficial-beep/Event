@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Mail, Phone, LogOut, Ticket, ArrowLeft 
 } from 'lucide-react';
+import API_URL from '../config/api';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -20,8 +21,7 @@ export default function Profile() {
           return;
         }
 
-        //const { data } = await axios.get('http://localhost:5000/api/users/profile', {
-        const { data } = await axios.get('https://event-kqrm.onrender.com/api/users/profile', {
+        const { data } = await axios.get(`${API_URL}/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         

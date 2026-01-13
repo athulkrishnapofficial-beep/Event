@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Save, ArrowLeft, Image as ImageIcon, Loader } from 'lucide-react';
+import API_URL from '../config/api';
 
 export default function EditEvent() {
   const { id } = useParams();
@@ -25,8 +26,7 @@ export default function EditEvent() {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        //const { data } = await axios.get(`http://localhost:5000/api/events/single/${id}`);
-        const { data } = await axios.get(`https://event-kqrm.onrender.com/api/events/single/${id}`);
+        const { data } = await axios.get(`${API_URL}/api/events/single/${id}`);
         
         // Format date for HTML input (YYYY-MM-DD)
         const formattedDate = data.date ? new Date(data.date).toISOString().split('T')[0] : '';
@@ -86,8 +86,7 @@ export default function EditEvent() {
 
     try {
       const token = localStorage.getItem('token');
-      //await axios.put(`http://localhost:5000/api/events/${id}`, data, {
-      await axios.put(`https://event-kqrm.onrender.com/api/events/${id}`, data, {
+      await axios.put(`${API_URL}/api/events/${id}`, data, {
         headers: { 
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`

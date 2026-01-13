@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Users, Briefcase, CheckCircle, LogOut, MessageSquare, X, Mail } from 'lucide-react';
+import API_URL from '../config/api';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('pending'); 
@@ -16,8 +17,6 @@ export default function AdminDashboard() {
 
     setLoading(true);
     try {
-      const baseUrl = 'https://event-kqrm.onrender.com';
-      
       let endpoint = '';
       if (activeTab === 'users') endpoint = '/api/admin/users';
       if (activeTab === 'organizers') endpoint = '/api/admin/organizers';
@@ -25,7 +24,7 @@ export default function AdminDashboard() {
       if (activeTab === 'approved') endpoint = '/api/admin/events/approved';
       if (activeTab === 'support') endpoint = '/api/support';
 
-      const res = await axios.get(`${baseUrl}${endpoint}`, {
+      const res = await axios.get(`${API_URL}${endpoint}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -49,7 +48,7 @@ export default function AdminDashboard() {
   const approveEvent = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`https://event-kqrm.onrender.com/api/admin/approve-event/${id}`, {}, {
+      await axios.put(`${API_URL}/api/admin/approve-event/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert("Event Approved!");
@@ -64,7 +63,7 @@ export default function AdminDashboard() {
     if (window.confirm("Unapprove this event?")) {
       try {
         const token = localStorage.getItem('token');
-        await axios.put(`https://event-kqrm.onrender.com/api/admin/unapprove-event/${id}`, {}, {
+        await axios.put(`${API_URL}/api/admin/unapprove-event/${id}`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
         alert("Event Unapproved!");

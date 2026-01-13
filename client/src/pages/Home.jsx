@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react'; 
 import axios from 'axios'; 
 import { Link, useNavigate } from 'react-router-dom'; 
-import { Ticket, Search, LogOut, User } from 'lucide-react'; 
+import { Ticket, Search, LogOut, User } from 'lucide-react';
+import API_URL from '../config/api'; 
 
 // --- 1. HERO SKELETON (Only for the image part) ---
 function HeroImageSkeleton() {
@@ -146,8 +147,7 @@ export default function Home() {
   useEffect(() => {
     const fetchApprovedEvents = async () => {
       try {
-        const { data } = await axios.get('https://event-kqrm.onrender.com/api/events');
-        //const { data } = await axios.get('http://localhost:5000/api/events');
+        const { data } = await axios.get(`${API_URL}/api/events`);
         const approved = data.filter(event => event.isApproved === true);
         setEvents(approved);
         setFilteredEvents(approved);

@@ -2,6 +2,7 @@
 import { useState } from 'react'; // For managing form input state
 import axios from 'axios'; // For making API requests
 import { useNavigate, Link } from 'react-router-dom'; // For navigation and internal linking
+import API_URL from '../config/api';
 
 // Main Login component
 export default function Login() {
@@ -18,8 +19,7 @@ export default function Login() {
 
     try {
       // Send POST request to backend for authentication
-       const { data } = await axios.post('https://event-kqrm.onrender.com/api/users/login', {
-       //const { data } = await axios.post('http://localhost:5000/api/users/login', { 
+      const { data } = await axios.post(`${API_URL}/api/users/login`, { 
       
         email,  // User email
         password // User password

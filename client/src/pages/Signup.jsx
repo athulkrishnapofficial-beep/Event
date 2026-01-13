@@ -1,6 +1,7 @@
 import { useState } from 'react'; // Import useState hook to manage form state
 import axios from 'axios'; // Import Axios for HTTP requests
 import { useNavigate, Link } from 'react-router-dom'; // useNavigate for redirects, Link for client-side navigation
+import API_URL from '../config/api';
 
 export default function Signup() {
   const [formData, setFormData] = useState({
@@ -18,8 +19,7 @@ export default function Signup() {
     setIsLoading(true); // Start loading animation
 
     try {
-      await axios.post('https://event-kqrm.onrender.com/api/users/signup', formData); // Send signup data to backend
-      //await axios.post('http://localhost:5000/api/users/signup', formData);
+      await axios.post(`${API_URL}/api/users/signup`, formData); // Send signup data to backend
       
       alert("Registration Successful!"); // Notify success
       navigate('/login'); // Redirect to login page

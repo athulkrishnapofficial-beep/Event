@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'; // React hooks for state and lifecy
 import axios from 'axios'; // HTTP client for API requests
 import { useNavigate } from 'react-router-dom'; // For programmatic navigation
 import { Loader, TrendingUp, Users, Ticket, Edit, Plus } from 'lucide-react'; // Added icons for better UI
+import API_URL from '../config/api';
 
 export default function OrganizerDashboard() {
   const [myEvents, setMyEvents] = useState([]); // Stores all events created by this organizer
@@ -18,8 +19,7 @@ export default function OrganizerDashboard() {
     }
 
     try {
-      const { data } = await axios.get('https://event-kqrm.onrender.com/api/events/my-events', {
-      //const { data } = await axios.get('http://localhost:5000/api/events/my-events', {
+      const { data } = await axios.get(`${API_URL}/api/events/my-events`, {
         headers: { Authorization: `Bearer ${token}` } // Include Authorization header
       });
       setMyEvents(data); // Save events to state

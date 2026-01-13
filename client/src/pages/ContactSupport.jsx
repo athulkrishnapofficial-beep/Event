@@ -5,6 +5,7 @@ import {
   ArrowLeft, Mail, Phone, MapPin, Send, 
   MessageSquare, HelpCircle, CheckCircle 
 } from 'lucide-react';
+import API_URL from '../config/api';
 
 export default function ContactSupport() {
   const navigate = useNavigate();
@@ -30,10 +31,7 @@ const handleSubmit = async (e) => {
   setStatus('sending');
 
   try {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://event-kqrm.onrender.com' 
-      : 'http://localhost:5000';
-    await axios.post(`${baseUrl}/api/support`, formData);
+    await axios.post(`${API_URL}/api/support`, formData);
     
     setStatus('success');
     setFormData({ name: '', email: '', subject: '', message: '' }); 
