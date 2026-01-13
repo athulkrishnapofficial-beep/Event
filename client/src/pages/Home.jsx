@@ -146,8 +146,8 @@ export default function Home() {
   useEffect(() => {
     const fetchApprovedEvents = async () => {
       try {
-        //const { data } = await axios.get('https://event-kqrm.onrender.com/api/events');
-        const { data } = await axios.get('http://localhost:5000/api/events');
+        const { data } = await axios.get('https://event-kqrm.onrender.com/api/events');
+        //const { data } = await axios.get('http://localhost:5000/api/events');
         const approved = data.filter(event => event.isApproved === true);
         setEvents(approved);
         setFilteredEvents(approved);

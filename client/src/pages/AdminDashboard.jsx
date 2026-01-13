@@ -20,8 +20,8 @@ export default function AdminDashboard() {
       if (activeTab === 'pending') endpoint = '/api/admin/events/pending';
       if (activeTab === 'approved') endpoint = '/api/admin/events/approved';
 
-      const res = await axios.get(`http://localhost:5000${endpoint}`, {
-      //const res = await axios.get(`https://event-kqrm.onrender.com${endpoint}`, {
+      //const res = await axios.get(`http://localhost:5000${endpoint}`, {
+      const res = await axios.get(`https://event-kqrm.onrender.com${endpoint}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setData(res.data);

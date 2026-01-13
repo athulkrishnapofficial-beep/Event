@@ -41,8 +41,8 @@ export default function EventDetails() {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        //const baseUrl = 'https://event-1-ie8k.onrender.com';
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = 'https://event-1-ie8k.onrender.com';
+        //const baseUrl = 'http://localhost:5000';
 
         
         const { data } = await axios.get(`${baseUrl}/api/events/single/${id}`);
@@ -104,8 +104,8 @@ export default function EventDetails() {
     setInterestCount(prev => previousState ? prev - 1 : prev + 1);
 
     try {
-      //const baseUrl = 'https://event-1-ie8k.onrender.com';
-      const baseUrl = 'http://localhost:5000';
+      const baseUrl = 'https://event-1-ie8k.onrender.com';
+      //const baseUrl = 'http://localhost:5000';
 
       const { data } = await axios.put(
         `${baseUrl}/api/events/interest/${event._id}`,
@@ -133,8 +133,8 @@ export default function EventDetails() {
     }
 
     try {
-      //const baseUrl = 'https://event-1-ie8k.onrender.com';
-      const baseUrl = 'http://localhost:5000';
+      const baseUrl = 'https://event-1-ie8k.onrender.com';
+      //const baseUrl = 'http://localhost:5000';
       
       // Calculate Total Amount
       const totalAmount = event.price * ticketCount;

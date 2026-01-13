@@ -26,8 +26,8 @@ export default function AdminLogin() {
 
     try {
       // 3. Perform Standard Login to get Token
-      const { data } = await axios.post('http://localhost:5000/api/auth/login', {
-      //const { data } = await axios.post('https://event-kqrm.onrender.com/api/auth/login', {
+      //const { data } = await axios.post('http://localhost:5000/api/auth/login', {
+      const { data } = await axios.post('https://event-kqrm.onrender.com/api/auth/login', {
         email: formData.email,
         password: formData.password
       });
