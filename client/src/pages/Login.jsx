@@ -91,7 +91,7 @@ export default function Login() {
               </div>
               <input 
                 type="email"  // Input type: email
-                placeholder="you@example.com" // Placeholder example
+                placeholder="Enter your email" // Placeholder example
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all outline-none sm:text-sm" // Styling
                 onChange={(e) => setEmail(e.target.value)} // Update email state
                 required // Field validation
