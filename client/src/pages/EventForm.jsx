@@ -8,11 +8,9 @@ const handleSubmit = async (e) => {
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   try {
-    // FIX 2 & 3: Add headers and correct the syntax
     await axios.post(`${API_BASE}/api/events`, data, {
       headers: {
-        'Authorization': `Bearer ${token}`, // Attach the token here
-        // 'Content-Type': 'multipart/form-data' // (Optional: Axios usually detects this automatically for FormData)
+        'Authorization': `Bearer ${token}`, 
       }
     }); 
 

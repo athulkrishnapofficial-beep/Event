@@ -338,7 +338,7 @@ export default function Home() {
           ) : filteredEvents.length === 0 ? (
             <NoEventsState resetFilters={() => {setSearchQuery(""); setSelectedCategory("All");}} />
           ) : (
-            // Render Cards (Images load independently now)
+            // Render Cards (Images load independently )
             filteredEvents.map(event => (
               <EventCard key={event._id} event={event} />
             ))

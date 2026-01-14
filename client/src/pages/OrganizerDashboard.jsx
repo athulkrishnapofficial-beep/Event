@@ -176,7 +176,7 @@ export default function OrganizerDashboard() {
                                     className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-black hover:text-white transition"
                                     title="Edit Event"
                                     >
-                                    <Edit className="w-4 h-4" /> {/* Edit icon */}
+                                    <Edit className="w-4 h-4" /> 
                                     </button>
                                 </td>
                             </tr>

@@ -34,7 +34,7 @@ export default function AdminLogin() {
 
       if (data.token) {
         localStorage.setItem('token', data.token);
-        localStorage.setItem('role', 'admin'); // Optional: store role for UI checks
+        localStorage.setItem('role', 'admin'); 
         alert("Welcome, Admin.");
         navigate('/admin/dashboard');
       }
