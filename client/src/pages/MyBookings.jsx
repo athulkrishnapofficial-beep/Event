@@ -95,7 +95,7 @@ export default function MyBookings() {
                       
                       <div className="flex items-center gap-2">
                         {booking.isVip && (
-                          <span className="bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-amber-300">
+                          <span className="bg-linear-to-r from-amber-100 to-yellow-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-amber-300">
                             <Crown className="w-3 h-3 mr-1 fill-amber-600" /> VIP
                           </span>
                         )}

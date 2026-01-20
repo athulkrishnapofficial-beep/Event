@@ -488,7 +488,7 @@ export default function EventDetails() {
                   {/* --------------------------------- */}
 
                   {/* VIP TICKET OPTION */}
-                  <div className="mb-8 p-4 rounded-xl border-2 bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200 cursor-pointer hover:shadow-md transition-all" onClick={() => setIsVip(!isVip)}>
+                  <div className="mb-8 p-4 rounded-xl border-2 bg-linear-to-br from-amber-50 to-yellow-50 border-amber-200 cursor-pointer hover:shadow-md transition-all" onClick={() => setIsVip(!isVip)}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <Crown className={`w-5 h-5 ${isVip ? 'text-amber-600 fill-amber-600' : 'text-amber-500'}`} />
