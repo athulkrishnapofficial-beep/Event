@@ -1,15 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Ticket, Calendar, MapPin, CheckCircle, XCircle, ArrowLeft, Loader, Users, Crown } from 'lucide-react'; // Added Crown icon
+import { 
+  Ticket, Calendar, MapPin, CheckCircle, XCircle, ArrowLeft, Loader, 
+  Crown, Download, Clock 
+} from 'lucide-react';
 import QRCode from "react-qr-code";
-import API_URL from '../config/api';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // State to hold the specific booking currently being printed
+  const [printTicket, setPrintTicket] = useState(null); 
+  
   const navigate = useNavigate();
 
+  // 1. Fetch Data
   useEffect(() => {
     const fetchBookings = async () => {
       const token = localStorage.getItem('token');
@@ -18,7 +27,8 @@ export default function MyBookings() {
         return;
       }
       try {
-        const { data } = await axios.get(`${API_URL}/api/bookings/my-bookings`, {
+        const baseUrl = 'https://event-kqrm.onrender.com';
+        const { data } = await axios.get(`${baseUrl}/api/bookings/my-bookings`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setBookings(data);
@@ -31,6 +41,53 @@ export default function MyBookings() {
     fetchBookings();
   }, [navigate]);
 
+  // 2. Trigger Download Logic
+  // When 'printTicket' state changes, this effect runs to generate the PDF
+  useEffect(() => {
+    if (printTicket) {
+      const generatePDF = async () => {
+        try {
+          // Wait briefly for React to render the hidden template
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          const input = document.getElementById('printable-ticket-template');
+          
+          if (!input) throw new Error("Template not found");
+
+          const canvas = await html2canvas(input, {
+            scale: 2, // High resolution
+            useCORS: true, 
+            backgroundColor: '#ffffff',
+            logging: false,
+          });
+
+          const imgData = canvas.toDataURL('image/png');
+          
+          // A4 dimensions in mm: 210 x 297
+          // We want a wide ticket, roughly 210mm wide x 90mm high
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const pdfWidth = 190; // 10mm margin on each side
+          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+          pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth, pdfHeight);
+          pdf.save(`EventEase-Ticket-${printTicket._id.slice(-6)}.pdf`);
+
+        } catch (err) {
+          console.error("PDF Generation Error:", err);
+          alert("Failed to generate ticket. Please try again.");
+        } finally {
+          setPrintTicket(null); // Reset state
+        }
+      };
+
+      generatePDF();
+    }
+  }, [printTicket]);
+
+  const handleDownload = (booking) => {
+    setPrintTicket(booking);
+  };
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
       <Loader className="w-10 h-10 animate-spin text-red-600" />
@@ -39,6 +96,106 @@ export default function MyBookings() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
+      
+      {/* --- HIDDEN PROFESSIONAL TEMPLATE (Only renders during download) --- */}
+      {printTicket && (
+        <div 
+          id="printable-ticket-template" 
+          style={{
+            position: 'fixed',
+            top: '-9999px',
+            left: '-9999px',
+            width: '800px', // Fixed high-res width
+            backgroundColor: '#ffffff',
+            border: '1px solid #e5e7eb',
+            fontFamily: 'sans-serif',
+            color: '#1f2937',
+            display: 'flex',
+            flexDirection: 'row',
+            overflow: 'hidden'
+          }}
+        >
+          {/* Left Side: Event Details */}
+          <div style={{ flex: 2, padding: '30px', borderRight: '2px dashed #d1d5db' }}>
+            
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h1 style={{ fontSize: '24px', fontWeight: '900', color: '#dc2626', margin: 0, textTransform: 'uppercase' }}>EventEase</h1>
+              <span style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '4px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                CONFIRMED BOOKING
+              </span>
+            </div>
+
+            {/* Event Title */}
+            <h2 style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1.1', marginBottom: '15px', color: '#111827' }}>
+              {printTicket.event.title}
+            </h2>
+
+            {/* Info Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '30px' }}>
+              <div>
+                <p style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '4px' }}>Date</p>
+                <div style={{ display: 'flex', alignItems: 'center', fontWeight: '600' }}>
+                  <Calendar size={16} style={{ marginRight: '8px', color: '#dc2626' }} />
+                  {new Date(printTicket.event.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </div>
+              </div>
+              
+              <div>
+                <p style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '4px' }}>Location</p>
+                <div style={{ display: 'flex', alignItems: 'center', fontWeight: '600' }}>
+                  <MapPin size={16} style={{ marginRight: '8px', color: '#dc2626' }} />
+                  {printTicket.event.location}
+                </div>
+              </div>
+
+              <div>
+                <p style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '4px' }}>Ticket Type</p>
+                <div style={{ fontWeight: '600', fontSize: '16px' }}>
+                  {printTicket.isVip ? 'VIP ACCESS' : 'GENERAL ADMISSION'}
+                </div>
+              </div>
+
+              <div>
+                <p style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '4px' }}>Attendees</p>
+                <div style={{ fontWeight: '600', fontSize: '16px' }}>
+                  {printTicket.quantity || 1} Person(s)
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #f3f4f6', fontSize: '10px', color: '#9ca3af' }}>
+              <p>Booking ID: <span style={{ fontFamily: 'monospace', color: '#374151' }}>{printTicket.paymentId}</span></p>
+              <p style={{ marginTop: '4px' }}>Please present this QR code at the entrance for verification.</p>
+            </div>
+          </div>
+
+          {/* Right Side: QR Code & Price (Tear-off look) */}
+          <div style={{ flex: 1, backgroundColor: '#f9fafb', padding: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ padding: '10px', backgroundColor: 'white', borderRadius: '10px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+              <QRCode 
+                value={JSON.stringify({ id: printTicket._id, status: 'valid' })}
+                size={120}
+                fgColor="#000000"
+                bgColor="#ffffff"
+              />
+            </div>
+            
+            <div style={{ marginTop: '20px', textAlign: 'center' }}>
+              <p style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', fontWeight: 'bold' }}>Total Paid</p>
+              <p style={{ fontSize: '28px', fontWeight: '900', color: '#111827' }}>₹{printTicket.amount}</p>
+            </div>
+
+            <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
+               <img src="/logo.png" alt="" style={{ height: '24px', opacity: 0.5 }} onError={(e) => e.target.style.display = 'none'} />
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ---------------------------------------------------------------- */}
+
+      {/* VISIBLE UI */}
       <div className="bg-white sticky top-0 z-10 shadow-sm border-b">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <button onClick={() => navigate('/home')} className="text-gray-600 hover:text-black transition">
@@ -63,117 +220,97 @@ export default function MyBookings() {
           </div>
         ) : (
           bookings.map((booking) => {
-            // --- DATE LOGIC ---
             const eventDate = new Date(booking.event?.date);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             eventDate.setHours(0, 0, 0, 0);
             const isExpired = eventDate < today;
-            // ------------------
-
-            // Fallback to 1 if quantity is missing in DB
             const ticketCount = booking.quantity || 1; 
 
+            // Standard Colors for UI (Safe from PDF errors now)
             return (
-              <div key={booking._id} className="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col sm:flex-row border border-gray-100 relative group">
-                
-                {/* Event Image */}
-                <div className={`sm:w-1/3 h-48 sm:h-auto relative bg-gray-200 ${isExpired ? 'grayscale' : ''}`}>
-                  <img 
-                    src={booking.event?.coverImage}
-                    alt={booking.event?.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+              <div className="relative group" key={booking._id}>
+                {/* --- UI CARD (For Screen Only) --- */}
+                <div className="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col sm:flex-row border border-gray-100">
+                  <div className={`sm:w-1/3 h-48 sm:h-auto relative bg-gray-200 ${isExpired ? 'grayscale' : ''}`}>
+                    {booking.event?.coverImage ? (
+                        <img src={booking.event.coverImage} alt={booking.event?.title} className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+                    )}
+                  </div>
 
-                <div className="flex-1 p-6 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-start mb-2">
-                      <h2 className={`text-xl font-black line-clamp-1 ${isExpired ? 'text-gray-500' : 'text-gray-900'}`}>
-                        {booking.event?.title}
-                      </h2>
-                      
-                      <div className="flex items-center gap-2">
-                        {booking.isVip && (
-                          <span className="bg-linear-to-r from-amber-100 to-yellow-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-amber-300">
-                            <Crown className="w-3 h-3 mr-1 fill-amber-600" /> VIP
-                          </span>
-                        )}
-                        {isExpired ? (
-                          <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-gray-200">
-                            <XCircle className="w-3 h-3 mr-1" /> EXPIRED
-                          </span>
-                        ) : (
-                          <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-green-200">
-                            <CheckCircle className="w-3 h-3 mr-1" /> VALID
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2 text-sm text-gray-500 mt-2">
-                      <div className="flex items-center">
-                        <Calendar className={`w-4 h-4 mr-2 ${isExpired ? 'text-gray-400' : 'text-red-500'}`} />
-                        {booking.event?.date?.split('T')[0]}
-                      </div>
-                      <div className="flex items-center">
-                        <MapPin className={`w-4 h-4 mr-2 ${isExpired ? 'text-gray-400' : 'text-red-500'}`} />
-                        {booking.event?.location}
-                      </div>
-
-                      {/* --- TICKET COUNT DISPLAY --- */}
-                      <div className="flex items-center">
-                        <Ticket className={`w-4 h-4 mr-2 ${isExpired ? 'text-gray-400' : 'text-red-500'}`} />
-                        <span className="font-semibold text-gray-700">
-                           {ticketCount} {ticketCount > 1 ? 'Tickets' : 'Ticket'}
-                        </span>
-                      </div>
-
-                      {booking.promoCode && (
-                        <div className="flex items-center text-green-600">
-                          <span className="text-xs font-bold bg-green-100 px-2 py-0.5 rounded-full">
-                            Promo: {booking.promoCode} (-₹{booking.discount})
-                          </span>
+                  <div className="flex-1 p-6 flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-start mb-2">
+                        <h2 className={`text-xl font-black line-clamp-1 ${isExpired ? 'text-gray-500' : 'text-gray-900'}`}>
+                          {booking.event?.title}
+                        </h2>
+                        
+                        <div className="flex items-center gap-2">
+                          {booking.isVip && (
+                            <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-amber-300">
+                              <Crown className="w-3 h-3 mr-1 fill-amber-600" /> VIP
+                            </span>
+                          )}
+                          {isExpired ? (
+                            <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-gray-200">
+                              <XCircle className="w-3 h-3 mr-1" /> EXPIRED
+                            </span>
+                          ) : (
+                            <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-green-200">
+                              <CheckCircle className="w-3 h-3 mr-1" /> VALID
+                            </span>
+                          )}
                         </div>
-                      )}
-
-                      <div className="flex items-center font-mono text-xs text-gray-400 pt-2">
-                          ID: {booking.paymentId?.slice(-10).toUpperCase()}
+                      </div>
+                      
+                      <div className="space-y-2 text-sm text-gray-500 mt-2">
+                        <div className="flex items-center">
+                          <Calendar className={`w-4 h-4 mr-2 ${isExpired ? 'text-gray-400' : 'text-red-500'}`} />
+                          {booking.event?.date?.split('T')[0]}
+                        </div>
+                        <div className="flex items-center">
+                          <MapPin className={`w-4 h-4 mr-2 ${isExpired ? 'text-gray-400' : 'text-red-500'}`} />
+                          {booking.event?.location}
+                        </div>
+                        <div className="flex items-center">
+                          <Ticket className={`w-4 h-4 mr-2 ${isExpired ? 'text-gray-400' : 'text-red-500'}`} />
+                          <span className="font-semibold text-gray-700">{ticketCount} {ticketCount > 1 ? 'Tickets' : 'Ticket'}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="mt-6 pt-6 border-t border-dashed border-gray-200 flex justify-between items-end">
-                    
-                    {/* QR Code */}
-                    <div className={`bg-white p-2 border border-gray-100 rounded-lg shadow-sm ${isExpired ? 'opacity-30 grayscale' : ''}`}>
-                      <QRCode 
-                          value={JSON.stringify({ 
-                              id: booking._id, 
-                              tickets: ticketCount, 
-                              status: isExpired ? 'Expired' : 'Valid' 
-                          })}
-                          size={64}
-                          fgColor="#000000"
-                          bgColor="#ffffff"
-                          level="Q"
-                      />
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total Paid</p>
-                      <p className={`text-2xl font-black ${isExpired ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
-                        ₹{booking.amount}
-                      </p>
-                      <p className="text-[10px] text-gray-400 mt-1">
-                        {isExpired ? 'Event Concluded' : 'Scan for Entry'}
-                      </p>
+                    <div className="mt-6 pt-6 border-t border-dashed border-gray-200 flex justify-between items-end">
+                      <div className={`bg-white p-2 border border-gray-100 rounded-lg shadow-sm ${isExpired ? 'opacity-30 grayscale' : ''}`}>
+                        <QRCode value={booking._id} size={64} />
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total Paid</p>
+                        <p className={`text-2xl font-black ${isExpired ? 'text-gray-400 line-through' : 'text-gray-900'}`}>₹{booking.amount}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="absolute top-1/2 -left-3 w-6 h-6 bg-gray-50 rounded-full border-r border-gray-200 sm:hidden"></div>
-                <div className="absolute top-1/2 -right-3 w-6 h-6 bg-gray-50 rounded-full border-l border-gray-200 sm:hidden"></div>
+                {/* --- DOWNLOAD BUTTON --- */}
+                <div className="flex justify-end mt-3 mb-8">
+                   <button 
+                      onClick={() => handleDownload(booking)}
+                      disabled={printTicket !== null}
+                      className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-red-600 transition-colors disabled:opacity-50"
+                   >
+                      {printTicket?._id === booking._id ? (
+                        <>
+                           <Loader className="w-4 h-4 animate-spin" /> Generating Ticket...
+                        </>
+                      ) : (
+                        <>
+                           <Download className="w-4 h-4" /> Download PDF Ticket
+                        </>
+                      )}
+                   </button>
+                </div>
               </div>
             );
           })
