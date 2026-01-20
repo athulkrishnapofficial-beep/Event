@@ -162,8 +162,8 @@ export default function EventDetails() {
     setInterestCount(prev => previousState ? prev - 1 : prev + 1);
 
     try {
-      //const baseUrl = 'https://event-1-ie8k.onrender.com';
-      const baseUrl = 'http://localhost:5000';
+      const baseUrl = 'https://event-1-ie8k.onrender.com';
+      //const baseUrl = 'http://localhost:5000';
 
       const { data } = await axios.put(
         `${baseUrl}/api/events/interest/${event._id}`,
@@ -193,8 +193,8 @@ export default function EventDetails() {
     console.log('Token being sent:', token ? 'Present' : 'Missing');
 
     try {
-      const baseUrl = 'http://localhost:5000';
-      //const baseUrl = 'https://event-1-ie8k.onrender.com';
+      //const baseUrl = 'http://localhost:5000';
+      const baseUrl = 'https://event-1-ie8k.onrender.com';
       
       // First, verify the token is valid
       console.log('Verifying token...');
