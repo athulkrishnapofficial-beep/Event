@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { 
   ArrowLeft, Calendar, MapPin, Ticket, ShieldCheck, 
-  Heart, Clock, Info, CheckCircle, Minus, Plus, Crown // Added Minus/Plus/Crown icons
+  Heart, Clock, Info, CheckCircle, Minus, Plus, Crown, Tag // Added Tag icon for promo
 } from 'lucide-react';
 import { Link } from "react-router-dom";
 import API_URL from '../config/api';
@@ -40,6 +40,22 @@ export default function EventDetails() {
   
   // --- NEW STATE: VIP TICKET ---
   const [isVip, setIsVip] = useState(false);
+
+  // --- NEW STATE: PROMO CODE ---
+  const [promoCode, setPromoCode] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoMessage, setPromoMessage] = useState('');
+  const [promoApplied, setPromoApplied] = useState(false);
+
+  // Sample promo codes with discounts (can be fetched from backend)
+  const VALID_PROMO_CODES = {
+    'SAVE10': 10,      // 10% discount
+    'SAVE20': 20,      // 20% discount
+    'EARLYBIRD': 15,   // 15% discount
+    'WELCOME': 5,      // 5% discount
+    'FRIEND50': 50,    // ₹50 flat discount
+    'NEWUSER': 25,     // 25% discount
+  };
 
   // Fetch Event Data & Verify Interest
   useEffect(() => {
@@ -86,6 +102,48 @@ export default function EventDetails() {
     if (ticketCount > 1) {
       setTicketCount(prev => prev - 1);
     }
+  };
+
+  // --- PROMO CODE HANDLER ---
+  const applyPromoCode = () => {
+    const code = promoCode.trim().toUpperCase();
+    
+    if (!code) {
+      setPromoMessage('Please enter a promo code');
+      setPromoDiscount(0);
+      setPromoApplied(false);
+      return;
+    }
+
+    if (VALID_PROMO_CODES[code] !== undefined) {
+      const discountValue = VALID_PROMO_CODES[code];
+      setPromoDiscount(discountValue);
+      setPromoApplied(true);
+      setPromoMessage(`✅ Promo code applied! ${discountValue}${discountValue >= 100 ? ' flat' : '%'} off`);
+    } else {
+      setPromoDiscount(0);
+      setPromoApplied(false);
+      setPromoMessage('❌ Invalid promo code');
+    }
+  };
+
+  // --- CALCULATE FINAL PRICE WITH DISCOUNT ---
+  const calculateFinalPrice = () => {
+    let basePrice = event.price * ticketCount;
+    if (isVip) {
+      basePrice += 500;
+    }
+
+    let discount = 0;
+    if (promoApplied) {
+      if (promoDiscount >= 100) {
+        discount = promoDiscount; // Flat discount
+      } else {
+        discount = Math.floor((basePrice * promoDiscount) / 100); // Percentage discount
+      }
+    }
+
+    return Math.max(0, basePrice - discount);
   };
 
   // --- HANDLER: MARK AS INTERESTED ---
@@ -153,22 +211,36 @@ export default function EventDetails() {
         return;
       }
       
-      // Calculate Total Amount with VIP surcharge
-      let totalAmount = event.price * ticketCount;
+      // Calculate Total Amount with VIP surcharge and promo discount
+      let basePrice = event.price * ticketCount;
       if (isVip) {
-        totalAmount += 500; // Add 500 RS for VIP
+        basePrice += 500; // Add 500 RS for VIP
       }
 
+      let discount = 0;
+      if (promoApplied) {
+        if (promoDiscount >= 100) {
+          discount = promoDiscount; // Flat discount
+        } else {
+          discount = Math.floor((basePrice * promoDiscount) / 100); // Percentage discount
+        }
+      }
+
+      const totalAmount = Math.max(0, basePrice - discount);
+
       console.log('Creating order with amount:', totalAmount);
+      console.log('Base Price:', basePrice, 'Discount:', discount);
       console.log('Token substring:', token.substring(0, 20) + '...' );
       console.log('Full auth header:', `Bearer ${token.substring(0, 20)}...`);
 
       const orderResponse = await axios.post(
         `${baseUrl}/api/payments/order`,
         { 
-          amount: totalAmount, // Send total calculated price
+          amount: totalAmount, // Send total calculated price with discount
           eventId: event._id,
-          quantity: ticketCount // Send quantity so backend knows how many to deduct
+          quantity: ticketCount, // Send quantity so backend knows how many to deduct
+          promoCode: promoApplied ? promoCode : '', // Pass promo code if applied
+          discount: discount // Pass discount amount
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -190,7 +262,9 @@ export default function EventDetails() {
               eventId: event._id,
               amount: totalAmount,
               quantity: ticketCount, // Pass quantity to verify/booking endpoint as well
-              isVip: isVip // Pass VIP flag
+              isVip: isVip, // Pass VIP flag
+              promoCode: promoApplied ? promoCode : '', // Pass promo code
+              discount: discount // Pass discount amount
             };
             const verifyResponse = await axios.post(
               `${baseUrl}/api/payments/verify`,
@@ -372,12 +446,12 @@ export default function EventDetails() {
                   <div className="relative z-10">
                     <p className="text-sm text-gray-300 font-medium uppercase tracking-widest mb-1">Total Price</p>
                     <div className="flex items-baseline justify-center gap-1">
-                      {/* DYNAMIC TOTAL PRICE */}
-                      <span className="text-4xl font-black">₹{event.price * ticketCount + (isVip ? 500 : 0)}</span>
+                      {/* DYNAMIC TOTAL PRICE WITH DISCOUNT */}
+                      <span className="text-4xl font-black">₹{calculateFinalPrice()}</span>
                     </div>
-                    {/* Shows unit price calculation */}
+                    {/* Shows unit price calculation with discount breakdown */}
                     <p className="text-xs text-gray-400 mt-1">
-                       (₹{event.price} × {ticketCount} tickets{isVip ? ' + ₹500 VIP' : ''})
+                       (₹{event.price} × {ticketCount} tickets{isVip ? ' + ₹500 VIP' : ''}{promoApplied ? ` - ₹${Math.floor((event.price * ticketCount + (isVip ? 500 : 0)) * promoDiscount / 100) || promoDiscount} OFF` : ''})
                     </p>
                   </div>
                 </div>
@@ -429,6 +503,42 @@ export default function EventDetails() {
                         onChange={() => setIsVip(!isVip)}
                         className="w-5 h-5 accent-amber-600 cursor-pointer"
                       />
+                    </div>
+                  </div>
+                  {/* --------------------------------- */}
+
+                  {/* PROMO CODE SECTION */}
+                  <div className="mb-8 p-4 rounded-xl border border-gray-200 bg-blue-50 hover:shadow-md transition-all">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Tag className="w-5 h-5 text-blue-600" />
+                      <label className="text-sm font-bold text-gray-900">Promo Code</label>
+                    </div>
+                    
+                    <div className="flex gap-2 mb-2">
+                      <input 
+                        type="text"
+                        placeholder="Enter promo code"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && applyPromoCode()}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                      />
+                      <button 
+                        onClick={applyPromoCode}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-sm transition-colors"
+                      >
+                        Apply
+                      </button>
+                    </div>
+
+                    {promoMessage && (
+                      <p className={`text-xs font-semibold ${promoApplied ? 'text-green-700' : 'text-red-700'}`}>
+                        {promoMessage}
+                      </p>
+                    )}
+
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <p className="text-xs text-gray-600 font-medium">Sample codes: SAVE10, SAVE20, WELCOME, NEWUSER</p>
                     </div>
                   </div>
                   {/* --------------------------------- */}
@@ -526,7 +636,7 @@ export default function EventDetails() {
           <div className="flex flex-col">
             <span className="text-xs text-gray-500 font-bold uppercase tracking-wide">Total</span>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-gray-900">₹{event.price * ticketCount + (isVip ? 500 : 0)}</span>
+              <span className="text-2xl font-black text-gray-900">₹{calculateFinalPrice()}</span>
             </div>
           </div>
           <button 

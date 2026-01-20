@@ -129,6 +129,14 @@ export default function MyBookings() {
                         </span>
                       </div>
 
+                      {booking.promoCode && (
+                        <div className="flex items-center text-green-600">
+                          <span className="text-xs font-bold bg-green-100 px-2 py-0.5 rounded-full">
+                            Promo: {booking.promoCode} (-₹{booking.discount})
+                          </span>
+                        </div>
+                      )}
+
                       <div className="flex items-center font-mono text-xs text-gray-400 pt-2">
                           ID: {booking.paymentId?.slice(-10).toUpperCase()}
                       </div>
