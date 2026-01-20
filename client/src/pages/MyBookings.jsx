@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Ticket, Calendar, MapPin, CheckCircle, XCircle, ArrowLeft, Loader, Users } from 'lucide-react'; // Added Users icon
+import { Ticket, Calendar, MapPin, CheckCircle, XCircle, ArrowLeft, Loader, Users, Crown } from 'lucide-react'; // Added Crown icon
 import QRCode from "react-qr-code";
 import API_URL from '../config/api';
 
@@ -93,15 +93,22 @@ export default function MyBookings() {
                         {booking.event?.title}
                       </h2>
                       
-                      {isExpired ? (
-                        <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-gray-200">
-                          <XCircle className="w-3 h-3 mr-1" /> EXPIRED
-                        </span>
-                      ) : (
-                        <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-green-200">
-                          <CheckCircle className="w-3 h-3 mr-1" /> VALID
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {booking.isVip && (
+                          <span className="bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-amber-300">
+                            <Crown className="w-3 h-3 mr-1 fill-amber-600" /> VIP
+                          </span>
+                        )}
+                        {isExpired ? (
+                          <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-gray-200">
+                            <XCircle className="w-3 h-3 mr-1" /> EXPIRED
+                          </span>
+                        ) : (
+                          <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center border border-green-200">
+                            <CheckCircle className="w-3 h-3 mr-1" /> VALID
+                          </span>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="space-y-2 text-sm text-gray-500 mt-2">

@@ -19,7 +19,9 @@ const app = express();
 app.use(express.json());
 app.use(cors({
     origin: '*', 
-    credentials: true
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Serve images
 app.use("/api/users", userRoutes);

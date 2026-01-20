@@ -16,6 +16,7 @@ const bookingSchema = new mongoose.Schema({
     amount: { type: Number, required: true },
     quantity: { type: Number, required: true, default: 1 },
     status: { type: String, default: 'Confirmed' },
+    isVip: { type: Boolean, default: false },
 }, { timestamps: true });
 
 module.exports = mongoose.models.Booking || mongoose.model('Booking', bookingSchema);

@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { 
   ArrowLeft, Calendar, MapPin, Ticket, ShieldCheck, 
-  Heart, Clock, Info, CheckCircle, Minus, Plus // Added Minus/Plus icons
+  Heart, Clock, Info, CheckCircle, Minus, Plus, Crown // Added Minus/Plus/Crown icons
 } from 'lucide-react';
 import { Link } from "react-router-dom";
 import API_URL from '../config/api';
@@ -37,6 +37,9 @@ export default function EventDetails() {
 
   // --- NEW STATE: TICKET COUNT ---
   const [ticketCount, setTicketCount] = useState(1);
+  
+  // --- NEW STATE: VIP TICKET ---
+  const [isVip, setIsVip] = useState(false);
 
   // Fetch Event Data & Verify Interest
   useEffect(() => {
@@ -129,12 +132,36 @@ export default function EventDetails() {
       return;
     }
 
+    console.log('Token being sent:', token ? 'Present' : 'Missing');
+
     try {
-      const baseUrl = 'https://event-1-ie8k.onrender.com';
       //const baseUrl = 'http://localhost:5000';
+      const baseUrl = 'https://event-1-ie8k.onrender.com';
       
-      // Calculate Total Amount
-      const totalAmount = event.price * ticketCount;
+      // First, verify the token is valid
+      console.log('Verifying token...');
+      try {
+        await axios.get(`${baseUrl}/api/users/check-user`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('✅ Token is valid');
+      } catch (tokenError) {
+        console.log('❌ Token verification failed:', tokenError.response?.status, tokenError.response?.data?.message);
+        alert('Your session has expired. Please login again.');
+        localStorage.removeItem('token');
+        navigate('/login', { state: { from: location.pathname } });
+        return;
+      }
+      
+      // Calculate Total Amount with VIP surcharge
+      let totalAmount = event.price * ticketCount;
+      if (isVip) {
+        totalAmount += 500; // Add 500 RS for VIP
+      }
+
+      console.log('Creating order with amount:', totalAmount);
+      console.log('Token substring:', token.substring(0, 20) + '...' );
+      console.log('Full auth header:', `Bearer ${token.substring(0, 20)}...`);
 
       const orderResponse = await axios.post(
         `${baseUrl}/api/payments/order`,
@@ -162,7 +189,8 @@ export default function EventDetails() {
               razorpay_signature: response.razorpay_signature,
               eventId: event._id,
               amount: totalAmount,
-              quantity: ticketCount // Pass quantity to verify/booking endpoint as well
+              quantity: ticketCount, // Pass quantity to verify/booking endpoint as well
+              isVip: isVip // Pass VIP flag
             };
             const verifyResponse = await axios.post(
               `${baseUrl}/api/payments/verify`,
@@ -345,11 +373,11 @@ export default function EventDetails() {
                     <p className="text-sm text-gray-300 font-medium uppercase tracking-widest mb-1">Total Price</p>
                     <div className="flex items-baseline justify-center gap-1">
                       {/* DYNAMIC TOTAL PRICE */}
-                      <span className="text-4xl font-black">₹{event.price * ticketCount}</span>
+                      <span className="text-4xl font-black">₹{event.price * ticketCount + (isVip ? 500 : 0)}</span>
                     </div>
                     {/* Shows unit price calculation */}
                     <p className="text-xs text-gray-400 mt-1">
-                       (₹{event.price} × {ticketCount} tickets)
+                       (₹{event.price} × {ticketCount} tickets{isVip ? ' + ₹500 VIP' : ''})
                     </p>
                   </div>
                 </div>
@@ -381,6 +409,26 @@ export default function EventDetails() {
                         >
                             <Plus className="w-4 h-4" />
                         </button>
+                    </div>
+                  </div>
+                  {/* --------------------------------- */}
+
+                  {/* VIP TICKET OPTION */}
+                  <div className="mb-8 p-4 rounded-xl border-2 bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200 cursor-pointer hover:shadow-md transition-all" onClick={() => setIsVip(!isVip)}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Crown className={`w-5 h-5 ${isVip ? 'text-amber-600 fill-amber-600' : 'text-amber-500'}`} />
+                        <div className="text-left">
+                          <p className="text-sm font-bold text-gray-900">VIP Ticket</p>
+                          <p className="text-xs text-gray-600">Premium Experience +₹500</p>
+                        </div>
+                      </div>
+                      <input 
+                        type="checkbox" 
+                        checked={isVip} 
+                        onChange={() => setIsVip(!isVip)}
+                        className="w-5 h-5 accent-amber-600 cursor-pointer"
+                      />
                     </div>
                   </div>
                   {/* --------------------------------- */}
@@ -478,7 +526,7 @@ export default function EventDetails() {
           <div className="flex flex-col">
             <span className="text-xs text-gray-500 font-bold uppercase tracking-wide">Total</span>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-gray-900">₹{event.price * ticketCount}</span>
+              <span className="text-2xl font-black text-gray-900">₹{event.price * ticketCount + (isVip ? 500 : 0)}</span>
             </div>
           </div>
           <button 
