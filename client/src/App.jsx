@@ -11,6 +11,7 @@ import AdminLogin from './pages/AdminLogin';
 import EditEvent from './pages/EditEvent';
 import Profile from './pages/Profile';
 import ContactSupport from './pages/ContactSupport';
+import TicketScanner from './pages/Scanner';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -47,6 +48,7 @@ function App() {
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/contact-support" element={<ContactSupport />} />
+          <Route path="/scanner" element={<TicketScanner />} />
 
           {/* --- PROTECTED USER ROUTES (Login Required) --- */}
           <Route 
