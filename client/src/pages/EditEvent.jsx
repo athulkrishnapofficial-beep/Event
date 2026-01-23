@@ -19,7 +19,7 @@ export default function EditEvent() {
     price: '',
     totalTickets: '',
     category: '',
-    coverImage: null // This will store the NEW file if selected
+    coverImage: null // This will store the NEW file if selecte
   });
 
   // 1. Fetch Existing Data
