@@ -20,8 +20,10 @@ app.use(express.json());
 app.use(cors({
     origin: '*', 
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-rtb-fingerprint-id'],
+    exposedHeaders: ['Content-Type', 'Authorization', 'x-rtb-fingerprint-id'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    optionsSuccessStatus: 200
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Serve images
 app.use("/api/users", userRoutes);
