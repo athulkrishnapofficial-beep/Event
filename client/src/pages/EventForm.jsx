@@ -14,10 +14,9 @@ const handleSubmit = async (e) => {
       }
     }); 
 
-    alert("Event Created Successfully!");
     navigate('/organizer-dashboard');
   } catch (err) {
     const errorMsg = err.response?.data?.message || "Something went wrong";
-    alert("Error: " + errorMsg);
+    console.error("Error: " + errorMsg);
   }
 };

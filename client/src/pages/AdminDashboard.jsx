@@ -35,7 +35,7 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error(err);
       if(err.response?.status === 403 || err.response?.status === 401) {
-        alert("Access Denied");
+        console.error("Access Denied");
         navigate('/');
       }
     } finally {
@@ -52,10 +52,9 @@ export default function AdminDashboard() {
       await axios.put(`${API_URL}/api/admin/approve-event/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert("Event Approved!");
       fetchData();
     } catch (err) {
-      alert("Error approving event");
+      console.error("Error approving event:", err);
     }
   };
 
@@ -70,8 +69,7 @@ export default function AdminDashboard() {
         alert("Event Unapproved!");
         fetchData();
       } catch (err) {
-        alert("Error unapproving event");
-      }
+        console.error("Error unapproving event:", error)
     }
   };
 
@@ -229,3 +227,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+        }

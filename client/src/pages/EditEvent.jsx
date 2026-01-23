@@ -44,7 +44,7 @@ export default function EditEvent() {
         });
         setPreview(data.coverImage); // Show existing image
       } catch (err) {
-        alert("Error fetching event details");
+        console.error(err);
         navigate('/my-events');
       } finally {
         setLoading(false);
@@ -93,11 +93,9 @@ export default function EditEvent() {
         }
       });
       
-      alert("Event Updated Successfully!");
       navigate('/organizer-dashboard');
     } catch (err) {
       console.error(err);
-      alert("Update Failed: " + (err.response?.data?.message || err.message));
     }
   };
 

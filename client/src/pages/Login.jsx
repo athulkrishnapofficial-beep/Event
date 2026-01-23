@@ -40,7 +40,7 @@ export default function Login() {
       }
     } catch (err) {
       // Handle potential errors — show server message if available
-      alert(err.response?.data?.message || "Login failed. Check your credentials.");
+      console.error(err.response?.data?.message || "Login failed. Check your credentials.");
     } finally {
       setIsLoading(false); // Stop loading animation regardless of success/failure
     }

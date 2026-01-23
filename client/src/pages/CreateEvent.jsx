@@ -36,7 +36,7 @@ export default function CreateEvent() {
     if (file) {
       // strict check: if the file is not an image, reset the input
       if (!file.type.startsWith('image/')) {
-        alert('Only image files are allowed!');
+        console.error('Only image files are allowed!');
         e.target.value = ''; // Clear the input
         return;
       }
@@ -61,11 +61,9 @@ export default function CreateEvent() {
             Authorization: `Bearer ${token}`
         }
       });
-      alert('Event Created! Waiting for Admin Approval.'); 
       navigate('/organizer-dashboard'); 
     } catch (err) {
-      console.error(err);
-      alert('Error creating event'); 
+      console.error('Error creating event:', err); 
     }
   };
 

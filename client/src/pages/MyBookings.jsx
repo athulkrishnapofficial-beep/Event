@@ -74,7 +74,6 @@ export default function MyBookings() {
 
         } catch (err) {
           console.error("PDF Generation Error:", err);
-          alert("Failed to generate ticket. Please try again.");
         } finally {
           setPrintTicket(null); // Reset state
         }

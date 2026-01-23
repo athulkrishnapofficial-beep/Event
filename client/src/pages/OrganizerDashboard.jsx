@@ -13,7 +13,6 @@ export default function OrganizerDashboard() {
 
   const fetchMyData = async () => {
     if (!token) { // If no token, user is not logged in
-        alert("Please login first");
         navigate('/login'); // Redirect to login page
         return; // Stop execution
     }

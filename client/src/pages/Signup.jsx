@@ -21,10 +21,9 @@ export default function Signup() {
     try {
       await axios.post(`${API_URL}/api/users/signup`, formData); // Send signup data to backend
       
-      alert("Registration Successful!"); // Notify success
       navigate('/login'); // Redirect to login page
     } catch (err) {
-      alert(err.response?.data?.message || "Error during signup"); // Show backend error or fallback text
+      console.error(err.response?.data?.message || "Error during signup"); // Show backend error or fallback text
     } finally {
         setIsLoading(false); // Stop loading animation
     }

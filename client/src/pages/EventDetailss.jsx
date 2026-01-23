@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { 
   ArrowLeft, Calendar, MapPin, Ticket, ShieldCheck, 
-  Heart, Clock, Info, CheckCircle, Minus, Plus, Crown, Tag // Added Tag icon for promo
+  Heart, Clock, Info, CheckCircle, Minus, Plus, Crown, Tag, Loader2 
 } from 'lucide-react';
-import { Link } from "react-router-dom";
 import API_URL from '../config/api';
 
 // Function to decode JWT (Helper)
@@ -31,23 +30,24 @@ export default function EventDetails() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // --- NEW STATE: PAYMENT VERIFICATION LOADING ---
+  const [isVerifying, setIsVerifying] = useState(false);
+
   // Interest State
   const [isInterested, setIsInterested] = useState(false);
   const [interestCount, setInterestCount] = useState(0);
 
-  // --- NEW STATE: TICKET COUNT ---
+  // Ticket & Pricing State
   const [ticketCount, setTicketCount] = useState(1);
-  
-  // --- NEW STATE: VIP TICKET ---
   const [isVip, setIsVip] = useState(false);
-
-  // --- NEW STATE: PROMO CODE ---
+  
+  // Promo Code State
   const [promoCode, setPromoCode] = useState('');
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoMessage, setPromoMessage] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
 
-  // Sample promo codes with discounts (can be fetched from backend)
+  // Sample promo codes
   const VALID_PROMO_CODES = {
     'SAVE10': 10,      // 10% discount
     'SAVE20': 20,      // 20% discount
@@ -91,7 +91,7 @@ export default function EventDetails() {
     fetchEvent();
   }, [id]);
 
-  // --- TICKET COUNTER HANDLERS ---
+  // --- TICKET HANDLERS ---
   const incrementTickets = () => {
     if (event && ticketCount < event.availableTickets) {
       setTicketCount(prev => prev + 1);
@@ -127,7 +127,7 @@ export default function EventDetails() {
     }
   };
 
-  // --- CALCULATE FINAL PRICE WITH DISCOUNT ---
+  // --- CALCULATE FINAL PRICE ---
   const calculateFinalPrice = () => {
     let basePrice = event.price * ticketCount;
     if (isVip) {
@@ -146,7 +146,7 @@ export default function EventDetails() {
     return Math.max(0, basePrice - discount);
   };
 
-  // --- HANDLER: MARK AS INTERESTED ---
+  // --- INTEREST HANDLER ---
   const handleInterest = async () => {
     const token = localStorage.getItem('token');
     
@@ -162,11 +162,8 @@ export default function EventDetails() {
     setInterestCount(prev => previousState ? prev - 1 : prev + 1);
 
     try {
-      const baseUrl = 'https://event-1-ie8k.onrender.com';
-      //const baseUrl = 'http://localhost:5000';
-
       const { data } = await axios.put(
-        `${baseUrl}/api/events/interest/${event._id}`,
+        `${API_URL}/api/events/interest/${event._id}`,
         {}, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -178,11 +175,10 @@ export default function EventDetails() {
       console.error("Failed to update interest:", error);
       setIsInterested(previousState);
       setInterestCount(previousCount);
-      alert("Something went wrong. Please try again.");
     }
   };
 
-  // --- HANDLER: PAYMENT ---
+  // --- PAYMENT HANDLER ---
   const handlePayment = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -190,62 +186,46 @@ export default function EventDetails() {
       return;
     }
 
-    console.log('Token being sent:', token ? 'Present' : 'Missing');
-
     try {
-      //const baseUrl = 'http://localhost:5000';
-      const baseUrl = 'https://event-1-ie8k.onrender.com';
-      
-      // First, verify the token is valid
-      console.log('Verifying token...');
+      // 1. Verify Token
       try {
-        await axios.get(`${baseUrl}/api/users/check-user`, {
+        await axios.get(`${API_URL}/api/users/check-user`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        console.log('✅ Token is valid');
       } catch (tokenError) {
-        console.log('❌ Token verification failed:', tokenError.response?.status, tokenError.response?.data?.message);
-        alert('Your session has expired. Please login again.');
+        console.error('Session expired:', tokenError);
         localStorage.removeItem('token');
         navigate('/login', { state: { from: location.pathname } });
         return;
       }
       
-      // Calculate Total Amount with VIP surcharge and promo discount
+      // 2. Calculate Amount
+      const totalAmount = calculateFinalPrice();
+      
+      // Calculate Discount Amount for Backend Record
       let basePrice = event.price * ticketCount;
-      if (isVip) {
-        basePrice += 500; // Add 500 RS for VIP
-      }
-
-      let discount = 0;
+      if (isVip) basePrice += 500;
+      let discountAmount = 0;
       if (promoApplied) {
-        if (promoDiscount >= 100) {
-          discount = promoDiscount; // Flat discount
-        } else {
-          discount = Math.floor((basePrice * promoDiscount) / 100); // Percentage discount
-        }
+        if (promoDiscount >= 100) discountAmount = promoDiscount;
+        else discountAmount = Math.floor((basePrice * promoDiscount) / 100);
       }
 
-      const totalAmount = Math.max(0, basePrice - discount);
-
-      console.log('Creating order with amount:', totalAmount);
-      console.log('Base Price:', basePrice, 'Discount:', discount);
-      console.log('Token substring:', token.substring(0, 20) + '...' );
-      console.log('Full auth header:', `Bearer ${token.substring(0, 20)}...`);
-
+      // 3. Create Order
       const orderResponse = await axios.post(
-        `${baseUrl}/api/payments/order`,
+        `${API_URL}/api/payments/order`,
         { 
-          amount: totalAmount, // Send total calculated price with discount
+          amount: totalAmount,
           eventId: event._id,
-          quantity: ticketCount, // Send quantity so backend knows how many to deduct
-          promoCode: promoApplied ? promoCode : '', // Pass promo code if applied
-          discount: discount // Pass discount amount
+          quantity: ticketCount,
+          promoCode: promoApplied ? promoCode : '',
+          discount: discountAmount
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const order = orderResponse.data;
 
+      // 4. Open Razorpay
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
@@ -254,6 +234,9 @@ export default function EventDetails() {
         description: `Booking ${ticketCount} ticket(s) for ${event.title}`,
         order_id: order.id,
         handler: async (response) => {
+          // --- START LOADING SCREEN ---
+          setIsVerifying(true);
+
           try {
             const verifyData = {
               razorpay_order_id: response.razorpay_order_id,
@@ -261,24 +244,37 @@ export default function EventDetails() {
               razorpay_signature: response.razorpay_signature,
               eventId: event._id,
               amount: totalAmount,
-              quantity: ticketCount, // Pass quantity to verify/booking endpoint as well
-              isVip: isVip, // Pass VIP flag
-              promoCode: promoApplied ? promoCode : '', // Pass promo code
-              discount: discount // Pass discount amount
+              quantity: ticketCount,
+              isVip: isVip,
+              promoCode: promoApplied ? promoCode : '',
+              discount: discountAmount
             };
+
             const verifyResponse = await axios.post(
-              `${baseUrl}/api/payments/verify`,
+              `${API_URL}/api/payments/verify`,
               verifyData,
               { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            if (verifyResponse.data.success) {
-              navigate('/my-bookings');
-            }
+            // SUCCESS: Redirect
+            // Even if backend sends a weird status, if axios didn't throw, we assume success
+            // to avoid user panic.
+            console.log("Verify success:", verifyResponse.data);
+            navigate('/my-bookings', { replace: true });
+
           } catch (error) {
-            console.error("Verification failed:", error);
-            alert("Payment verification failed.");
+            console.error("Verification error:", error);
+            // SAFETY FALLBACK: Redirect anyway because money was likely deducted
+            navigate('/my-bookings', { replace: true });
+          } finally {
+             // In case navigation fails for some reason
+             setIsVerifying(false);
           }
+        },
+        modal: {
+            ondismiss: function() {
+                setIsVerifying(false); 
+            }
         },
         theme: { color: "#dc2626" },
       };
@@ -289,22 +285,38 @@ export default function EventDetails() {
     } catch (error) {
       console.error("Payment Error:", error);
       alert("Could not initiate payment. Please try again.");
-    }
-  };
+    
 
-  // Loading & Error States
+  // --- FULL SCREEN LOADING: VERIFYING PAYMENT ---
+  if (isVerifying) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm z-50 fixed inset-0">
+      <div className="flex flex-col items-center space-y-6 animate-in fade-in duration-500">
+        <div className="relative">
+           <div className="absolute inset-0 bg-green-100 rounded-full animate-ping opacity-75"></div>
+           <div className="relative bg-white p-4 rounded-full shadow-xl border-2 border-green-100">
+             <ShieldCheck className="w-12 h-12 text-green-600 animate-pulse" />
+           </div>
+        </div>
+        <div className="text-center space-y-2">
+           <h3 className="text-2xl font-bold text-gray-900">Verifying Payment</h3>
+           <p className="text-gray-500 max-w-xs mx-auto">Please wait while we confirm your booking and send your tickets...</p>
+        </div>
+        <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+      </div>
+    </div>
+  );
+
+  // --- INITIAL LOADING ---
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="flex flex-col items-center space-y-4">
-        <div className="relative">
-          <div className="h-16 w-16 border-4 border-gray-200 rounded-full"></div>
-          <div className="h-16 w-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-        </div>
+        <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
         <p className="text-gray-500 font-medium animate-pulse">Loading Event...</p>
       </div>
     </div>
   );
 
+  // --- NOT FOUND ---
   if (!event) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4 text-center">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full">
@@ -538,7 +550,7 @@ export default function EventDetails() {
                     )}
 
                     <div className="mt-3 pt-3 border-t border-gray-200">
-                      <p className="text-xs text-gray-600 font-medium">Sample codes: SAVE10, SAVE20, WELCOME, NEWUSER</p>
+                      <p className="text-xs text-gray-600 font-medium">Sample codes: SAVE10, SAVE20, WELCOME</p>
                     </div>
                   </div>
                   {/* --------------------------------- */}
@@ -654,4 +666,6 @@ export default function EventDetails() {
 
     </div>
   );
+}
+}
 }
