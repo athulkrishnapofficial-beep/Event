@@ -2,6 +2,8 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Booking = require('../models/Booking');
 const Event = require('../models/eventModel');
+const User = require('../models/userModel');
+const { sendBookingConfirmation } = require('../services/emailService');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -48,6 +50,36 @@ exports.verifyPayment = async (req, res) => {
       });
       await newBooking.save();
       await Event.findByIdAndUpdate(eventId, { $inc: { availableTickets: -(quantity || 1) } });
+
+      // Fetch user and event details for email
+      const user = await User.findById(req.user.id);
+      const event = await Event.findById(eventId);
+
+      // Send booking confirmation email
+      try {
+        await sendBookingConfirmation({
+          userEmail: user.email,
+          userName: user.fullName || user.name || 'User',
+          eventName: event.title,
+          eventDate: new Date(event.eventDate).toLocaleDateString('en-IN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }),
+          eventLocation: event.location,
+          ticketType: event.ticketType || 'General Admission',
+          quantity: quantity || 1,
+          amount: amount,
+          orderId: razorpay_order_id,
+          bookingId: newBooking._id.toString(),
+        });
+      } catch (emailError) {
+        console.error('Email sending failed, but booking was successful:', emailError);
+        // Don't fail the payment verification if email fails
+      }
 
       return res.status(200).json({ success: true, message: "Payment verified successfully" });
     } else {
