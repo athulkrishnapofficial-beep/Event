@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import axios from 'axios';
+import { useEffect } from 'react';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
@@ -31,6 +33,48 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 };
 
 function App() {
+  // Setup axios interceptor to automatically add token to all requests
+  useEffect(() => {
+    const requestInterceptor = axios.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+          console.log('✅ Token added to request:', config.url);
+        } else {
+          console.warn('⚠️ No token found in localStorage for request:', config.url);
+        }
+        return config;
+      },
+      (error) => {
+        console.error('❌ Request interceptor error:', error);
+        return Promise.reject(error);
+      }
+    );
+
+    // Setup response interceptor to handle 401 errors
+    const responseInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          console.warn('🔐 Unauthorized response received, clearing token');
+          localStorage.removeItem('token');
+          localStorage.removeItem('role');
+          localStorage.removeItem('userId');
+          // Optionally redirect to login (you might want to use useNavigate here)
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Cleanup interceptors on unmount
+    return () => {
+      axios.interceptors.request.eject(requestInterceptor);
+      axios.interceptors.response.eject(responseInterceptor);
+    };
+  }, []);
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">

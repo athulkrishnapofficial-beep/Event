@@ -285,7 +285,9 @@ export default function EventDetails() {
     } catch (error) {
       console.error("Payment Error:", error);
       alert("Could not initiate payment. Please try again.");
-    
+      setIsVerifying(false);
+    }
+  };
 
   // --- FULL SCREEN LOADING: VERIFYING PAYMENT ---
   if (isVerifying) return (
@@ -666,6 +668,4 @@ export default function EventDetails() {
 
     </div>
   );
-}
-}
 }
