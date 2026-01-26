@@ -385,7 +385,7 @@ export default function Home() {
           ) : filteredEvents.length === 0 ? (
             <NoEventsState resetFilters={() => {setSearchQuery(""); setSelectedCategory("All"); setSortBy("date-soon");}} />
           ) : (
-            // Render Cards (Images load independently )
+            // Render Cards (Images load independentlys )
             filteredEvents.map(event => (
               <EventCard key={event._id} event={event} />
             ))
