@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react'; 
 import axios from 'axios'; 
 import { Link, useNavigate } from 'react-router-dom'; 
-import { Ticket, Search, LogOut, User } from 'lucide-react';
+// Added ArrowUpDown for the sort button
+import { Ticket, Search, LogOut, User, ArrowUpDown } from 'lucide-react';
 import API_URL from '../config/api'; 
 
 // --- 1. HERO SKELETON (Only for the image part) ---
@@ -137,6 +138,9 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
+  // NEW: State for sorting
+  const [sortBy, setSortBy] = useState("date-soon"); // Default sort: Soonest events first
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -160,7 +164,9 @@ export default function Home() {
     fetchApprovedEvents();
   }, []);
 
+  // --- FILTERING & SORTING LOGIC ---
   useEffect(() => {
+    // 1. Filter by Search & Category
     let result = events;
 
     if (searchQuery) {
@@ -177,8 +183,25 @@ export default function Home() {
       );
     }
 
-    setFilteredEvents(result);
-  }, [searchQuery, selectedCategory, events]);
+    // 2. Sort Logic
+    // We create a copy with [...result] to avoid mutating state directly during sort
+    const sortedResult = [...result].sort((a, b) => {
+      switch (sortBy) {
+        case "price-low":
+          return a.price - b.price;
+        case "price-high":
+          return b.price - a.price;
+        case "date-soon":
+          return new Date(a.date) - new Date(b.date);
+        case "date-later":
+          return new Date(b.date) - new Date(a.date);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredEvents(sortedResult);
+  }, [searchQuery, selectedCategory, sortBy, events]);
 
   const handleLogout = () => {
       localStorage.removeItem('token'); 
@@ -202,6 +225,7 @@ export default function Home() {
               onClick={() => {
                 setSearchQuery("");
                 setSelectedCategory("All");
+                setSortBy("date-soon");
               }}
             >
               EventEase<span className="text-rose-500 not-italic">.</span>
@@ -318,6 +342,7 @@ export default function Home() {
 
       {/* MAIN CONTENT */}
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-12">
+        {/* HEADER: Title & Sort Button */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-6 md:mb-10 pb-4 border-b border-gray-200 gap-4">
           <div>
               <h2 className="text-2xl md:text-3xxl font-black text-gray-900 tracking-tight flex items-center gap-2 md:gap-3">
@@ -325,6 +350,28 @@ export default function Home() {
                   ? `Search: "${searchQuery}"`
                   : (selectedCategory === 'All' ? <> Recommended</> : selectedCategory)}
               </h2>
+          </div>
+
+          {/* NEW: Sort By Dropdown */}
+          <div className="flex items-center gap-3">
+             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider hidden md:block">Sort By:</span>
+             <div className="relative group">
+               <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+               <select 
+                 value={sortBy}
+                 onChange={(e) => setSortBy(e.target.value)}
+                 className="appearance-none bg-white border border-gray-200 text-gray-700 text-sm font-bold py-2.5 pl-9 pr-8 rounded-full shadow-sm hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-rose-500/50 transition-all cursor-pointer"
+               >
+                 <option value="date-soon">Date: Soonest First</option>
+                 <option value="date-later">Date: Latest First</option>
+                 <option value="price-low">Price: Low to High</option>
+                 <option value="price-high">Price: High to Low</option>
+               </select>
+               {/* Custom arrow for select */}
+               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                 <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+               </div>
+             </div>
           </div>
         </div>
 
@@ -336,7 +383,7 @@ export default function Home() {
               <GlobalLoadingSkeleton key={i} />
             ))
           ) : filteredEvents.length === 0 ? (
-            <NoEventsState resetFilters={() => {setSearchQuery(""); setSelectedCategory("All");}} />
+            <NoEventsState resetFilters={() => {setSearchQuery(""); setSelectedCategory("All"); setSortBy("date-soon");}} />
           ) : (
             // Render Cards (Images load independently )
             filteredEvents.map(event => (

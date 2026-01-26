@@ -90,7 +90,7 @@ export default function TicketScanner() {
              )}
              
              {/* Overlay Frame */}
-             <div className="absolute inset-0 border-[40px] border-black/50 pointer-events-none flex items-center justify-center">
+             <div className="absolute inset-0 border-40 border-black/50 pointer-events-none flex items-center justify-center">
                 <div className="w-64 h-64 border-2 border-red-500/50 rounded-2xl relative">
                     <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-red-500 -mt-1 -ml-1"></div>
                     <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-red-500 -mt-1 -mr-1"></div>
