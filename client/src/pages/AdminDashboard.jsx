@@ -69,7 +69,8 @@ export default function AdminDashboard() {
         alert("Event Unapproved!");
         fetchData();
       } catch (err) {
-        console.error("Error unapproving event:", error)
+        console.error("Error unapproving event:", err);
+      }
     }
   };
 
@@ -227,4 +228,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-        }
