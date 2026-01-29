@@ -1,17 +1,14 @@
 const nodemailer = require('nodemailer');
 
-// Create transporter using Gmail SMTP with enhanced configuration
+// Create transporter using Gmail SMTP - optimized for Render
 const transporter = nodemailer.createTransport({
   service: 'gmail',
+  port: 465,
+  secure: true, // Use SSL on port 465
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // Use App Password for Gmail
+    pass: process.env.EMAIL_PASS, // Must be 16-char App Password
   },
-  tls: {
-    rejectUnauthorized: false, // This helps with Render's environment
-  },
-  connectionTimeout: 5000,
-  socketTimeout: 5000,
 });
 
 /**
@@ -193,21 +190,17 @@ exports.sendBookingConfirmation = async (bookingDetails) => {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`✅ Booking confirmation email sent to ${userEmail}`);
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`✅ Email sent to ${userEmail}`, result.messageId);
     return true;
   } catch (error) {
-    console.error(`❌ Error sending email to ${userEmail}:`, {
-      error: error.message,
+    console.error(`❌ Email error to ${userEmail}:`, {
+      message: error.message,
       code: error.code,
-      response: error.response,
-      command: error.command
+      command: error.command,
+      response: error.response
     });
-    // Log the full error for debugging
-    console.error('Full error details:', error);
-    // Depending on your error handling policy, you might want to suppress this error 
-    // so it doesn't crash the request, or re-throw it.
-    // throw error; 
+    throw error;
   }
 };
 
