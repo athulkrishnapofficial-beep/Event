@@ -1,7 +1,7 @@
 const User = require('../models/userModel'); // Assuming you have a User model
 const Event = require('../models/eventModel');
 
-// 1. Get All Users (excluding admins)
+// Get All Users (excluding admins)
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find({ role: 'user' }).select('-password');
@@ -11,7 +11,7 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// 2. Get All Organizers
+// Get All Organizers
 exports.getAllOrganizers = async (req, res) => {
   try {
     const organizers = await User.find({ role: 'organizer' }).select('-password');
@@ -21,7 +21,7 @@ exports.getAllOrganizers = async (req, res) => {
   }
 };
 
-// 3. Get Pending Events
+// Get Pending Events
 exports.getPendingEvents = async (req, res) => {
   try {
     const events = await Event.find({ isApproved: false }).populate('organizer', 'name email');
@@ -31,7 +31,7 @@ exports.getPendingEvents = async (req, res) => {
   }
 };
 
-// 4. Approve Event
+// Approve Event
 exports.approveEvent = async (req, res) => {
   try {
     const event = await Event.findByIdAndUpdate(req.params.id, { isApproved: true }, { new: true });
@@ -41,7 +41,7 @@ exports.approveEvent = async (req, res) => {
   }
 };
 
-// 5. Get Approved Events
+// Get Approved Events
 exports.getApprovedEvents = async (req, res) => {
   try {
     const events = await Event.find({ isApproved: true }).populate('organizer', 'name email');
@@ -51,7 +51,7 @@ exports.getApprovedEvents = async (req, res) => {
   }
 };
 
-// 6. Unapprove Event
+// Unapprove Event
 exports.unapproveEvent = async (req, res) => {
   try {
     const event = await Event.findByIdAndUpdate(req.params.id, { isApproved: false }, { new: true });

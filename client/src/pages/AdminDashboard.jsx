@@ -29,7 +29,7 @@ export default function AdminDashboard() {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Safety check to ensure data is always an array
+      
       setData(Array.isArray(res.data) ? res.data : []);
       
     } catch (err) {

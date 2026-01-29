@@ -29,7 +29,7 @@ export default function MyBookings() {
   const navigate = useNavigate();
   const fetchAbortControllerRef = useRef(null);
 
-  // 1. Fetch Data with optimization
+  //Fetch Data with optimization
   useEffect(() => {
     const fetchBookings = async () => {
       const token = localStorage.getItem("token");
@@ -44,7 +44,7 @@ export default function MyBookings() {
       // Validate token format
       if (!token.startsWith("eyJ")) {
         console.warn(
-          "⚠️ Token format looks invalid. Expected JWT (starting with eyJ)",
+          "⚠️ Token format looks invalid.",
         );
       }
 
@@ -112,7 +112,7 @@ export default function MyBookings() {
 
     const timer = setTimeout(() => {
       fetchBookings();
-    }, 100); // Debounce fetch by 100ms
+    }, 100); 
 
     return () => {
       clearTimeout(timer);
@@ -122,7 +122,7 @@ export default function MyBookings() {
     };
   }, [navigate]);
 
-  // 2. Trigger Download Logic
+  //Trigger Download Logic
   // When 'printTicket' state changes, this effect runs to generate the PDF
   useEffect(() => {
     if (printTicket) {
@@ -155,7 +155,7 @@ export default function MyBookings() {
         } catch (err) {
           console.error("PDF Generation Error:", err);
         } finally {
-          setPrintTicket(null); // Reset state
+          setPrintTicket(null); 
         }
       };
 
@@ -196,7 +196,7 @@ export default function MyBookings() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
-      {/* --- HIDDEN PROFESSIONAL TEMPLATE (Only renders during download) --- */}
+      {/*HIDDEN PROFESSIONAL TEMPLATE (Only renders during download)*/}
       {printTicket && (
         <div
           id="printable-ticket-template"
@@ -497,10 +497,10 @@ export default function MyBookings() {
             const isExpired = eventDate < today;
             const ticketCount = booking.quantity || 1;
 
-            // Standard Colors for UI (Safe from PDF errors now)
+            // Standard Colors for UI 
             return (
               <div className="relative group" key={booking._id}>
-                {/* --- UI CARD (For Screen Only) --- */}
+                {/* UI CARD (For Screen Only)*/}
                 <div className="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col sm:flex-row border border-gray-100">
                   <div
                     className={`sm:w-1/3 h-48 sm:h-auto relative bg-gray-200 ${isExpired ? "grayscale" : ""}`}
@@ -592,7 +592,7 @@ export default function MyBookings() {
                   </div>
                 </div>
 
-                {/* --- DOWNLOAD BUTTON --- */}
+                {/*DOWNLOAD BUTTON*/}
                 <div className="flex justify-end mt-3 mb-8">
                   <button
                     onClick={() => handleDownload(booking)}

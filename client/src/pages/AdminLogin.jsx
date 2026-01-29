@@ -13,20 +13,20 @@ export default function AdminLogin() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // 1. Check Hardcoded Secret Code (Client-side Security Layer)
+    // Check Hardcoded Secret Code (Client-side Security Layer)
     if (formData.secretCode !== '123456') {
       alert("Invalid Secret Code! Access Denied.");
       return;
     }
 
-    // 2. Check Specific Admin Email
+    // Check Specific Admin Email
     if (formData.email !== 'admin@gmail.com') {
       alert("Only the Super Admin can access this page.");
       return;
     }
 
     try {
-      // 3. Perform Standard Login to get Token
+      // Perform Standard Login to get Token
       const { data } = await axios.post(`${API_URL}/api/auth/login`, {
         email: formData.email,
         password: formData.password

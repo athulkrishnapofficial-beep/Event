@@ -109,8 +109,7 @@ exports.deleteEvent = async (req, res) => {
   }
 };
 
-// --- NEW FUNCTION ADDED HERE ---
-// 4. Toggle Interest (Like/Unlike Event) - FIXED VERSION
+// 4. Toggle Interest (Like/Unlike Event) 
 exports.toggleInterest = async (req, res) => {
   try {
     const { id } = req.params;

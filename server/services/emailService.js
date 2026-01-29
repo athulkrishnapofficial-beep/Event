@@ -5,14 +5,11 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // Use App Password for Gmail
+    pass: process.env.EMAIL_PASS, 
   },
 });
 
-/**
- * Send booking confirmation email with professional HTML template
- * @param {Object} bookingDetails
- */
+
 exports.sendBookingConfirmation = async (bookingDetails) => {
   const {
     userEmail,

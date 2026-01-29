@@ -17,7 +17,7 @@ router.get('/my-bookings', auth, async (req, res) => {
                                   .sort({ createdAt: -1 })
                                   .skip(skip)
                                   .limit(limit)
-                                  .lean(); // Use lean() for better performance when not modifying docs
+                                  .lean(); 
                                   
     // Get total count for pagination info
     const total = await Booking.countDocuments({ user: req.user.id });

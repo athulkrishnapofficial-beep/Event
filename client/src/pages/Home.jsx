@@ -1,12 +1,11 @@
-// Import dependencies
+//Import dependencies
 import { useEffect, useState } from 'react'; 
 import axios from 'axios'; 
 import { Link, useNavigate } from 'react-router-dom'; 
-// Added ArrowUpDown for the sort button
 import { Ticket, Search, LogOut, User, ArrowUpDown } from 'lucide-react';
 import API_URL from '../config/api'; 
 
-// --- 1. HERO SKELETON (Only for the image part) ---
+//HERO SKELETON
 function HeroImageSkeleton() {
   return (
     <div className="absolute inset-0 bg-gray-200 animate-pulse">
@@ -15,7 +14,7 @@ function HeroImageSkeleton() {
   );
 }
 
-// --- 2. EVENT CARD (Text shows instantly, Image loads gracefully) ---
+//EVENT CARD (Text shows instantly, Image loads gracefully)
 function EventCard({ event }) {
   const [imageLoaded, setImageLoaded] = useState(false);
   
@@ -101,7 +100,7 @@ function GlobalLoadingSkeleton() {
   );
 }
 
-// --- NO EVENTS STATE ---
+//NO EVENTS STATE
 function NoEventsState({ resetFilters }) {
   return (
     <div className="col-span-full flex flex-col items-center justify-center py-12 md:py-24 text-center px-4">
@@ -125,21 +124,21 @@ function NoEventsState({ resetFilters }) {
   );
 }
 
-// --- MAIN HOME COMPONENT ---
+// MAIN HOME COMPONENT
 export default function Home() {
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
-  const [loading, setLoading] = useState(true); // Only for API fetch
+  const [loading, setLoading] = useState(true); //API fetch
   
   // Hero Image State
   const [heroLoaded, setHeroLoaded] = useState(false);
-  
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  // NEW: State for sorting
-  const [sortBy, setSortBy] = useState("date-soon"); // Default sort: Soonest events first
+  //Sorting
+  const [sortBy, setSortBy] = useState("date-soon"); // Default : sort by : Soonest events first
 
   const navigate = useNavigate();
 
@@ -164,7 +163,7 @@ export default function Home() {
     fetchApprovedEvents();
   }, []);
 
-  // --- FILTERING & SORTING LOGIC ---
+  //FILTERING & SORTING LOGIC
   useEffect(() => {
     // 1. Filter by Search & Category
     let result = events;
@@ -183,8 +182,7 @@ export default function Home() {
       );
     }
 
-    // 2. Sort Logic
-    // We create a copy with [...result] to avoid mutating state directly during sort
+    //Sort Logic
     const sortedResult = [...result].sort((a, b) => {
       switch (sortBy) {
         case "price-low":
@@ -307,15 +305,15 @@ export default function Home() {
         </div>
       </header>
 
-      {/* --- HERO SECTION --- */}
+      {/*HERO SECTION*/}
       {!searchQuery && (
         <section className="max-w-7xl mx-auto my-6 px-4 animate-fadeIn">
           <div className="relative h-48 md:h-80 rounded-2xl overflow-hidden shadow-2xl group bg-gray-900">
             
-            {/* 1. Hero Skeleton Overlay */}
+            {/*Hero Skeleton Overlay*/}
             {!heroLoaded && <HeroImageSkeleton />}
 
-            {/* 2. Hero Image */}
+            {/*Hero Image*/}
             <img
               src="/poster bg login.jpg"
               alt="Banner"
@@ -326,7 +324,7 @@ export default function Home() {
               `}
             />
 
-            {/* 3. Text (Visible Immediately over skeleton) */}
+            {/*Text (Visible Immediately over skeleton)*/}
             <div className="absolute inset-0 bg-linear-to-r from-black/80 to-transparent" />
             <div className="absolute left-8 md:left-16 top-1/2 -translate-y-1/2 text-white max-w-lg z-10">
               <h2 className="text-3xl md:text-5xl font-extrabold leading-tight">
@@ -352,7 +350,7 @@ export default function Home() {
               </h2>
           </div>
 
-          {/* NEW: Sort By Dropdown */}
+          {/* Sort By Dropdown */}
           <div className="flex items-center gap-3">
              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider hidden md:block">Sort By:</span>
              <div className="relative group">

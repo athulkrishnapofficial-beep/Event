@@ -156,7 +156,6 @@ export default function CreateEvent() {
           {/* Cover Image Upload */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">Cover Image</label>
-            {/* accept="image/*" restricts file dialog to only images */}
             <input 
               type="file" 
               name="coverImage" 

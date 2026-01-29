@@ -19,10 +19,10 @@ export default function EditEvent() {
     price: '',
     totalTickets: '',
     category: '',
-    coverImage: null // This will store the NEW file if selecte
+    coverImage: null 
   });
 
-  // 1. Fetch Existing Data
+  // Fetch Existing Data
   useEffect(() => {
     const fetchEvent = async () => {
       try {
@@ -40,7 +40,7 @@ export default function EditEvent() {
           price: data.price,
           totalTickets: data.totalTickets,
           category: data.category,
-          coverImage: null // We don't load the file object, just the preview URL below
+          coverImage: null 
         });
         setPreview(data.coverImage); // Show existing image
       } catch (err) {
@@ -53,12 +53,12 @@ export default function EditEvent() {
     fetchEvent();
   }, [id, navigate]);
 
-  // 2. Handle Text Changes
+  //Handle Text Changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 3. Handle File Changes
+  // Handle File Changes
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -67,7 +67,7 @@ export default function EditEvent() {
     }
   };
 
-  // 4. Submit Update
+  // Submit Update
   const handleSubmit = async (e) => {
     e.preventDefault();
     

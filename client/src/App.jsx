@@ -61,7 +61,7 @@ function App() {
           localStorage.removeItem('token');
           localStorage.removeItem('role');
           localStorage.removeItem('userId');
-          // Optionally redirect to login (you might want to use useNavigate here)
+          // Optionally redirect to login 
           window.location.href = '/login';
         }
         return Promise.reject(error);
@@ -79,12 +79,12 @@ function App() {
     <Router>
       <div className="min-h-screen bg-gray-50">
         <Routes>
-          {/* --- PUBLIC ROUTES (Visible to everyone) --- */}
-          {/* 1. Change root path to show Home instead of redirecting to Login */}
+          {/* PUBLIC ROUTES (Visible to everyone)*/}
+          {/* Change root path to show Home instead of redirecting to Login */}
           <Route path="/" element={<Home />} /> 
-          <Route path="/home" element={<Navigate to="/" replace />} /> {/* Optional: Redirect /home to / */}
+          <Route path="/home" element={<Navigate to="/" replace />} /> 
           
-          {/* 2. Event Details should be public so users can see what they are buying */}
+          {/* Event Details should be public so users can see what they are buying */}
           <Route path="/event/:id" element={<EventDetails />} />
           
           <Route path="/login" element={<Login />} />
@@ -94,7 +94,7 @@ function App() {
           <Route path="/contact-support" element={<ContactSupport />} />
           <Route path="/scanner" element={<TicketScanner />} />
 
-          {/* --- PROTECTED USER ROUTES (Login Required) --- */}
+          {/* PROTECTED USER ROUTES (Login Required) */}
           <Route 
             path="/my-bookings" 
             element={
@@ -104,7 +104,7 @@ function App() {
             } 
           />
 
-          {/* --- PROTECTED ORGANIZER ROUTES --- */}
+          {/* PROTECTED ORGANIZER ROUTES */}
           <Route 
             path="/organizer-dashboard" 
             element={
@@ -130,7 +130,7 @@ function App() {
             } 
           />
 
-          {/* --- PROTECTED ADMIN ROUTES --- */}
+          {/* PROTECTED ADMIN ROUTES */}
           <Route 
             path="/admin/dashboard" 
             element={

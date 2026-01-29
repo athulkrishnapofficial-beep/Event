@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import API_URL from '../config/api';
 
-// Function to decode JWT (Helper)
+// Function to decode JWT 
 const extractUserIdFromToken = (token) => {
   try {
     const base64Url = token.split('.')[1];
@@ -30,7 +30,7 @@ export default function EventDetails() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // --- NEW STATE: PAYMENT VERIFICATION LOADING ---
+  //PAYMENT VERIFICATION 
   const [isVerifying, setIsVerifying] = useState(false);
 
   // Interest State
@@ -91,7 +91,7 @@ export default function EventDetails() {
     fetchEvent();
   }, [id]);
 
-  // --- TICKET HANDLERS ---
+  // TICKET HANDLERS
   const incrementTickets = () => {
     if (event && ticketCount < event.availableTickets) {
       setTicketCount(prev => prev + 1);
@@ -104,7 +104,7 @@ export default function EventDetails() {
     }
   };
 
-  // --- PROMO CODE HANDLER ---
+  //PROMO CODE HANDLER
   const applyPromoCode = () => {
     const code = promoCode.trim().toUpperCase();
     
@@ -127,7 +127,7 @@ export default function EventDetails() {
     }
   };
 
-  // --- CALCULATE FINAL PRICE ---
+  //CALCULATE FINAL PRICE
   const calculateFinalPrice = () => {
     let basePrice = event.price * ticketCount;
     if (isVip) {
@@ -146,7 +146,7 @@ export default function EventDetails() {
     return Math.max(0, basePrice - discount);
   };
 
-  // --- INTEREST HANDLER ---
+  //INTEREST HANDLER
   const handleInterest = async () => {
     const token = localStorage.getItem('token');
     
@@ -178,7 +178,7 @@ export default function EventDetails() {
     }
   };
 
-  // --- PAYMENT HANDLER ---
+  //PAYMENT HANDLER
   const handlePayment = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -187,7 +187,7 @@ export default function EventDetails() {
     }
 
     try {
-      // 1. Verify Token
+      // Verify Token
       try {
         await axios.get(`${API_URL}/api/users/check-user`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -199,7 +199,7 @@ export default function EventDetails() {
         return;
       }
       
-      // 2. Calculate Amount
+      // Calculate Amount
       const totalAmount = calculateFinalPrice();
       
       // Calculate Discount Amount for Backend Record
@@ -211,7 +211,7 @@ export default function EventDetails() {
         else discountAmount = Math.floor((basePrice * promoDiscount) / 100);
       }
 
-      // 3. Create Order
+      // Create Order
       const orderResponse = await axios.post(
         `${API_URL}/api/payments/order`,
         { 
@@ -225,7 +225,7 @@ export default function EventDetails() {
       );
       const order = orderResponse.data;
 
-      // 4. Open Razorpay
+      // Open Razorpay
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
@@ -234,7 +234,7 @@ export default function EventDetails() {
         description: `Booking ${ticketCount} ticket(s) for ${event.title}`,
         order_id: order.id,
         handler: async (response) => {
-          // --- START LOADING SCREEN ---
+          //START LOADING SCREEN
           setIsVerifying(true);
 
           try {
@@ -257,8 +257,6 @@ export default function EventDetails() {
             );
 
             // SUCCESS: Redirect
-            // Even if backend sends a weird status, if axios didn't throw, we assume success
-            // to avoid user panic.
             console.log("Verify success:", verifyResponse.data);
             navigate('/my-bookings', { replace: true });
 
@@ -289,7 +287,7 @@ export default function EventDetails() {
     }
   };
 
-  // --- FULL SCREEN LOADING: VERIFYING PAYMENT ---
+  // FULL SCREEN LOADING: VERIFYING PAYMENT
   if (isVerifying) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm z-50 fixed inset-0">
       <div className="flex flex-col items-center space-y-6 animate-in fade-in duration-500">
@@ -308,7 +306,7 @@ export default function EventDetails() {
     </div>
   );
 
-  // --- INITIAL LOADING ---
+  // INITIAL LOADING
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="flex flex-col items-center space-y-4">
@@ -318,7 +316,7 @@ export default function EventDetails() {
     </div>
   );
 
-  // --- NOT FOUND ---
+  // NOT FOUND
   if (!event) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4 text-center">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full">
@@ -472,7 +470,7 @@ export default function EventDetails() {
 
                 <div className="p-6 sm:p-8">
                   
-                  {/* --- NUMBER OF TICKETS SELECTOR --- */}
+                  {/*NUMBER OF TICKETS SELECTOR*/}
                   <div className="mb-8">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-3">
                         Number of Tickets
@@ -633,7 +631,7 @@ export default function EventDetails() {
         </div>
       </main>
 
-      {/* --- MOBILE STICKY FOOTER --- */}
+      {/*MOBILE STICKY FOOTER */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50 lg:hidden shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
         
         {/* Mobile Ticket Selector Row */}

@@ -26,14 +26,14 @@ export default function OrganizerDashboard() {
       // --- CALCULATE STATS ---
       // Use reduce to accumulate totals across all events
       const calculatedStats = data.reduce((acc, event) => {
-        // 1. Safely convert values to numbers to avoid NaN
+        // Safely convert values to numbers to avoid NaN
         const price = Number(event.price) || 0;
         
         // Use totalTickets if present, otherwise fallback to availableTickets
         const total = Number(event.totalTickets) || Number(event.availableTickets) || 0;
         const available = Number(event.availableTickets) || 0;
 
-        // 2. Math Logic
+        // Math Logic
         const soldCount = total - available; // Total sold = total tickets - remaining
         const profit = soldCount * price;    // Revenue = sold tickets * price
 
@@ -70,7 +70,7 @@ export default function OrganizerDashboard() {
           <p className="text-gray-500 mt-1">Track your sales, profit, and event performance.</p>
         </div>
         
-        {/* --- ACTION BUTTONS --- */}
+        {/* ACTION BUTTONS */}
         <div className="flex items-center gap-3">
             {/* SCANNER BUTTON */}
             <button

@@ -18,7 +18,7 @@ export default function ContactSupport() {
     message: ''
   });
   
-  const [status, setStatus] = useState('idle'); // idle | sending | success | error
+  const [status, setStatus] = useState('idle'); 
   const [loading, setLoading] = useState(true);
 
   // Fetch user data on component mount

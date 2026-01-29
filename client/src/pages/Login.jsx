@@ -1,4 +1,3 @@
-// Importing essential libraries and hooks
 import { useState } from 'react'; // For managing form input state
 import axios from 'axios'; // For making API requests
 import { useNavigate, Link } from 'react-router-dom'; // For navigation and internal linking
